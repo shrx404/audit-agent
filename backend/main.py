@@ -16,6 +16,9 @@ from fastapi import FastAPI, HTTPException, Request, UploadFile, File
 from fastapi.responses import JSONResponse
 import json
 import uuid
+import io
+import pypdf
+import docx
 from datetime import datetime
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -91,13 +94,31 @@ def get_sources():
 async def upload_file(file: UploadFile = File(...)):
     hindsight = HindsightWrapper()
     content_bytes = await file.read()
-    content_str = content_bytes.decode('utf-8', errors='ignore')
+    
+    filename = file.filename.lower() if file.filename else ""
+    if filename.endswith(".pdf"):
+        try:
+            pdf_reader = pypdf.PdfReader(io.BytesIO(content_bytes))
+            content_str = "\n".join(page.extract_text() for page in pdf_reader.pages if page.extract_text())
+        except Exception:
+            content_str = "[Failed to extract PDF text]"
+    elif filename.endswith(".docx"):
+        try:
+            doc = docx.Document(io.BytesIO(content_bytes))
+            content_str = "\n".join(para.text for para in doc.paragraphs)
+        except Exception:
+            content_str = "[Failed to extract DOCX text]"
+    else:
+        content_str = content_bytes.decode('utf-8', errors='ignore')
+    
+    d_str = os.environ.get("AS_OF_DATE", "2026-09-28")
+    as_of_date = datetime.strptime(d_str, "%Y-%m-%d")
     
     doc_id = f"local:{uuid.uuid4()}"
     hindsight.retain(
         content=content_str,
         context=f"Uploaded document: {file.filename}",
-        timestamp=datetime.now(),
+        timestamp=as_of_date,
         document_id=doc_id,
         retain_async=False
     )
@@ -118,7 +139,7 @@ async def upload_file(file: UploadFile = File(...)):
         "kind": "Documents",
         "tone": "muted",
         "description": content_str[:200] + "..." if len(content_str) > 200 else content_str,
-        "date": datetime.now().strftime("%Y-%m-%d"),
+        "date": d_str,
         "details": {"size": len(content_bytes)},
         "content": content_str,
         "origin": "indexed",

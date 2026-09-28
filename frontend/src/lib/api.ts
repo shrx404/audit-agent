@@ -213,8 +213,8 @@ export class AuditApi {
   }
   async upload(file: File): Promise<{ source_id: string }> {
     // No ingestion route exists in the current MVP contract. Configure the real route and field after integrating the backend.
-    const path = process.env.NEXT_PUBLIC_SOURCE_UPLOAD_PATH;
-    const field = process.env.NEXT_PUBLIC_SOURCE_UPLOAD_FIELD;
+    const path = process.env.NEXT_PUBLIC_SOURCE_UPLOAD_PATH || "/upload";
+    const field = process.env.NEXT_PUBLIC_SOURCE_UPLOAD_FIELD || "file";
     if (!path || !field || !path.startsWith("/") || path.startsWith("//"))
       throw new Error(
         "Source indexing is not connected yet. The file is available locally but has not been indexed.",

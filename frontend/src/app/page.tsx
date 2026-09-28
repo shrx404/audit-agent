@@ -374,7 +374,8 @@ export default function Home() {
         localFiles.current.set(source.id, file);
         setSources((s) => [...s, source]);
         setUploadIds((ids) => [...ids, source.id]);
-        if (process.env.NEXT_PUBLIC_SOURCE_UPLOAD_PATH)
+        const uploadPath = process.env.NEXT_PUBLIC_SOURCE_UPLOAD_PATH || "/upload";
+        if (uploadPath)
           await indexSource(source, file);
       }
       await new Promise((resolve) => setTimeout(resolve, 1500));
