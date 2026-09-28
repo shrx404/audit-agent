@@ -184,6 +184,40 @@ export default function Home() {
         };
       }
 
+      const newReferences: Reference[] = [];
+      if (data.sources && Array.isArray(data.sources)) {
+        for (const sourceId of data.sources) {
+          const sourceObj = sources.find((s) => s.id === sourceId);
+          if (sourceObj) {
+            newReferences.push({
+              id: sourceId,
+              sourceId: sourceId,
+              title: sourceObj.title,
+              category: sourceObj.category,
+              location: "",
+              snippet: sourceObj.content ? sourceObj.content.slice(0, 300) : "",
+              historical: false,
+            });
+          }
+        }
+      }
+      
+      if (data.memories && Array.isArray(data.memories)) {
+        for (const mem of data.memories) {
+          if (!newReferences.find((r) => r.id === mem.id)) {
+            newReferences.push({
+              id: mem.id,
+              sourceId: mem.id,
+              title: mem.type || "Historical Context",
+              category: "Memory",
+              location: mem.date || "",
+              snippet: mem.text,
+              historical: true,
+            });
+          }
+        }
+      }
+
       setMessages((m) => [
         ...m,
         {
@@ -192,6 +226,7 @@ export default function Home() {
           text: data.answer,
           sources: data.sources,
           memories: data.memories,
+          references: newReferences,
           memoryEnabled: useMemory,
           analysis: mockAnalysis,
         },

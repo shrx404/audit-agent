@@ -2,6 +2,58 @@ import { useEffect, useRef, useState } from "react";
 import { Icon } from "../Icon";
 import { relatedCases, sourcedClaim } from "../../lib/evidence";
 import type { Message, Reference } from "../../types/audit";
+import React from 'react';
+
+function formatTextWithCitations(text: string, references?: Reference[], onReference?: (r: Reference) => void) {
+  if (!text) return text;
+  
+  // Match [UUID] or just UUID
+  const uuidRegex = /\[?([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})\]?/g;
+  const parts = text.split(uuidRegex);
+  
+  if (parts.length <= 1) return text; // No matches
+  
+  const result: React.ReactNode[] = [];
+  for (let i = 0; i < parts.length; i++) {
+    if (i % 2 === 0) {
+      result.push(parts[i]);
+    } else {
+      const uuid = parts[i];
+      const refIndex = references ? references.findIndex(r => r.id === uuid || r.sourceId === uuid) : -1;
+      const displayNum = refIndex !== -1 ? refIndex + 1 : '*';
+      const refObj = refIndex !== -1 && references ? references[refIndex] : undefined;
+      
+      result.push(
+        <button 
+          key={uuid + i}
+          onClick={refObj && onReference ? () => onReference(refObj) : undefined}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: 'rgba(99, 102, 241, 0.1)',
+            color: '#818cf8',
+            borderRadius: '12px',
+            padding: '0 6px',
+            fontSize: '0.7rem',
+            margin: '0 3px',
+            verticalAlign: 'middle',
+            fontWeight: 600,
+            cursor: refObj ? 'pointer' : 'default',
+            border: 'none',
+            outline: 'none',
+            lineHeight: '1.2'
+          }}
+          title={refObj ? refObj.title : `Source ID: ${uuid}`}
+        >
+          {displayNum}
+        </button>
+      );
+    }
+  }
+  
+  return <>{result}</>;
+}
 
 export function ChatWindow({
   messages,
@@ -87,7 +139,12 @@ export function ChatWindow({
               {m.role === "user" ? "You" : "Audit Memory"}
             </div>
             <div className="message-content">
-              <p className="answer-text">{m.text}</p>
+              <div className="answer-text">
+                {formatTextWithCitations(m.text, m.references, (r) => {
+                  onSelectAnswer(m);
+                  onReference(r);
+                })}
+              </div>
               {m.analysis && (
                 <>
                   <div className="analysis-details">

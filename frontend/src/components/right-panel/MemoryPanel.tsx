@@ -84,9 +84,9 @@ export function MemoryPanel({references,analysis,memories,allowHistory,onReferen
       uniqueMemories.push(m);
     }
   }
-  return <aside className="references-panel" aria-label="References used">
+  return <aside className="references-panel" aria-label="Sources cited">
 
-    <header className="references-header"><h2>References used</h2>{!!visible.length&&<span>{visible.length}</span>}</header><div className="references-scroll">{visible.length ? <div className="reference-list">{visible.map((r,i)=><button className="reference-item" key={r.id} onClick={()=>onReference(r)}><span className="reference-heading"><DocumentIcon filename={r.title}/><strong>{r.title}</strong><span className="reference-number">{i+1}</span></span><span className="reference-meta">{r.category}{r.location&&` · ${r.location}`}</span><span className="reference-snippet">{r.snippet.length>185?`${r.snippet.slice(0,182)}…`:r.snippet}</span></button>)}</div> : <div className="references-empty"><Icon name="file" size={21}/><p>Sources cited in your answer<br/>will appear here.</p></div>}
+    <header className="references-header"><h2>Sources cited</h2>{!!visible.length&&<span>{visible.length}</span>}</header><div className="references-scroll">{visible.length ? <div className="reference-list">{visible.map((r,i)=><button className="reference-item" key={r.id} onClick={()=>onReference(r)}><span className="reference-heading"><DocumentIcon filename={r.title}/><strong>{r.title}</strong><span className="reference-number">{i+1}</span></span><span className="reference-meta">{r.category}{r.location&&` · ${r.location}`}</span><span className="reference-snippet">{r.snippet.length>185?`${r.snippet.slice(0,182)}…`:r.snippet}</span></button>)}</div> : <div className="references-empty"><Icon name="file" size={21}/><p>Sources cited in your answer<br/>will appear here.</p></div>}
     
     <section className="past-cases">
       <h3>Recalled Context</h3>
