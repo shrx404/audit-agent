@@ -81,16 +81,8 @@ export default function Home() {
     const source = mentioned || selected;
     const sourceControl = source?.details.control_id;
     if (typeof sourceControl === "string") setControl(sourceControl);
-    if (
-      !control ||
-      !department ||
-      (typeof sourceControl === "string" && sourceControl !== control)
-    ) {
-      setPendingQuestion(question);
-      setModal("context");
-      return;
-    }
-    void analyze(question, { control_id: control, department });
+    const currentControl = typeof sourceControl === "string" ? sourceControl : (control || "General");
+    void analyze(question, { control_id: currentControl, department: department || "General" });
   }
   async function analyze(
     question: string,
