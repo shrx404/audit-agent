@@ -34,4 +34,7 @@ export interface Analysis {
 export interface ConfirmationRequest { analysis_id: string; decision: 'confirm_recurrence' | 'not_recurrence' | 'correct'; linked_finding_ids: string[]; confirmed_root_cause?: string | null; confirmed_remediation?: string | null; outcome: 'open' | 'remediated_with_evidence' | 'remediated_no_evidence' | 'accepted_risk'; analyst: string; note?: string | null }
 export interface ConfirmationResult { ok: true; trust: 'verified'; retained_mem_ids: string[]; retrievable: boolean; message: string }
 export interface Reference { id: string; sourceId: string; title: string; category: string; location: string; snippet: string; historical: boolean }
-export interface Message { id: string; role: 'user' | 'assistant'; text: string; error?: boolean; analysis?: Analysis; references?: Reference[]; memoryEnabled?: boolean; confirmation?: ConfirmationResult }
+export interface MemoryHit { id: string; text: string; type: string; date: string | null; relevance: string; }
+export interface Flag { id: string; control_id: string; kind: string; description: string; severity: "critical" | "high" | "medium" | "low"; state: "open" | "resolved" | "false_alarm"; explanation: string; sources: string[]; }
+export interface ReadinessReport { score: number; total_controls: number; flags: Flag[]; }
+export interface Message { id: string; role: 'user' | 'assistant'; text: string; error?: boolean; analysis?: Analysis; references?: Reference[]; memoryEnabled?: boolean; confirmation?: ConfirmationResult; sources?: string[]; memories?: MemoryHit[]; }

@@ -3,6 +3,8 @@ import type {
   ConfirmationRequest,
   ConfirmationResult,
   FindingRequest,
+  MemoryHit,
+  ReadinessReport,
 } from "../types/audit";
 
 type JsonObject = Record<string, unknown>;
@@ -228,6 +230,18 @@ export class AuditApi {
         "The backend has not confirmed that this file was indexed. You can retry when indexing is available.",
       );
     return { source_id: result.source_id };
+  }
+  async ask(question: string, useMemory: boolean): Promise<{ answer: string; sources: string[]; memories: MemoryHit[] }> {
+    const result = await this.request("/ask", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question, use_memory: useMemory }),
+    });
+    return result as { answer: string; sources: string[]; memories: MemoryHit[] };
+  }
+  async getReadiness(): Promise<ReadinessReport> {
+    const result = await this.request("/readiness");
+    return result as ReadinessReport;
   }
 }
 export const auditApi = new AuditApi(

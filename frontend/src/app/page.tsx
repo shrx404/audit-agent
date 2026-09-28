@@ -7,7 +7,6 @@ import { MemoryPanel } from "../components/right-panel/MemoryPanel";
 import { ConfirmationForm } from "../components/ConfirmationForm";
 import { DocumentIcon, Icon } from "../components/Icon";
 import { auditApi } from "../lib/api";
-import { referencesFor } from "../lib/evidence";
 import {
   sources as seedSources,
   isSupportedFile,
@@ -15,11 +14,11 @@ import {
 } from "../lib/sources";
 import type {
   ConfirmationRequest,
-  FindingRequest,
   Message,
   Reference,
   SourceCategory,
   SourceRecord,
+  ReadinessReport,
 } from "../types/audit";
 
 type Modal =
@@ -36,6 +35,7 @@ export default function Home() {
   const [memory, setMemory] = useState(true);
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
+  const [readiness, setReadiness] = useState<ReadinessReport | null>(null);
   const [activeId, setActiveId] = useState("");
   const [selected, setSelected] = useState<SourceRecord | null>(null);
   const [modal, setModal] = useState<Modal>(null);
@@ -61,6 +61,19 @@ export default function Home() {
     if (modal) dialog.current?.showModal();
     else dialog.current?.close();
   }, [modal]);
+  useEffect(() => {
+    const fetchReadiness = async () => {
+      try {
+        const res = await fetch("/api/readiness");
+        if (res.ok) {
+          setReadiness(await res.json());
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    fetchReadiness();
+  }, []);
   const busy = confirmationBusy || uploading;
   function closeModal() {
     if (!busy) setModal(null);
@@ -81,13 +94,9 @@ export default function Home() {
     const source = mentioned || selected;
     const sourceControl = source?.details.control_id;
     if (typeof sourceControl === "string") setControl(sourceControl);
-    const currentControl = typeof sourceControl === "string" ? sourceControl : (control || "General");
-    void analyze(question, { control_id: currentControl, department: department || "General" });
+    void analyze(question);
   }
-  async function analyze(
-    question: string,
-    context: { control_id: string; department: string },
-  ) {
+  async function analyze(question: string) {
     if (loading) return;
     const userId = crypto.randomUUID();
     const useMemory = memory;
@@ -95,45 +104,49 @@ export default function Home() {
     setLoading(true);
     setActiveId("");
     setModal(null);
+    
+    // Create finding input
     const mentioned = sources.find(
       (s) => question.includes(s.id) && s.origin !== "local",
     );
     const current = mentioned || selected;
-    const input: FindingRequest = {
-      ...context,
-      finding: question,
-      evidence_ref: current?.id || null,
-    };
-    if (current?.content)
-      input.finding = `${question}\n\nCurrent source (${current.title}, ${current.id}):\n${current.content.slice(0, 12000)}`;
+    let finalQuestion = question;
+    if (current?.content) {
+      finalQuestion = `${question}\n\nCurrent source (${current.title}, ${current.id}):\n${current.content.slice(0, 12000)}`;
+    }
+
     try {
-      const result = await auditApi.analyze(input, useMemory);
-      const refs = referencesFor(result, sources);
+      const res = await fetch("/api/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question: finalQuestion, use_memory: useMemory }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "An error occurred");
+      }
+      
       const id = crypto.randomUUID();
       setMessages((m) => [
         ...m,
         {
           id,
           role: "assistant",
-          text: refs.length
-            ? result.explanation
-            : "No history found. There is no cited source evidence for this answer.",
-          analysis: result,
-          references: refs,
+          text: data.answer,
+          sources: data.sources,
+          memories: data.memories,
           memoryEnabled: useMemory,
         },
       ]);
       setActiveId(id);
-    } catch (error) {
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to fetch response.";
       setMessages((m) => [
         ...m,
         {
           id: crypto.randomUUID(),
-          role: "assistant",
-          text:
-            error instanceof Error
-              ? error.message
-              : "The analysis could not be completed. Please try again.",
+          role: "assistant", // Using assistant so it shows up on the left side
+          text: errorMessage,
           error: true,
         },
       ]);
@@ -299,6 +312,7 @@ export default function Home() {
         <MemoryPanel
           references={active?.references || []}
           analysis={active?.analysis}
+          readiness={readiness}
           allowHistory={memory && !!active?.memoryEnabled}
           onReference={showReference}
           onCase={(id) => {
@@ -431,10 +445,7 @@ export default function Home() {
               onSubmit={(e) => {
                 e.preventDefault();
                 if (control.trim() && department.trim())
-                  void analyze(pendingQuestion, {
-                    control_id: control.trim(),
-                    department: department.trim(),
-                  });
+                  void analyze(pendingQuestion);
               }}
             >
               <p className="dialog-description">

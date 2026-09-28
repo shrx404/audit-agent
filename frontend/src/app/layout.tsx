@@ -3,13 +3,13 @@ import localFont from "next/font/local";
 import "./globals.css";
 
 const geistSans = localFont({
-  src: "../public/fonts/geist-latin.woff2",
+  src: "../../public/fonts/geist-latin.woff2",
   variable: "--font-geist-sans",
   display: "swap",
 });
 
 const geistMono = localFont({
-  src: "../public/fonts/geist-mono-latin.woff2",
+  src: "../../public/fonts/geist-mono-latin.woff2",
   variable: "--font-geist-mono",
   display: "swap",
 });
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     "Your AI agent for compliance, audit, and risk memory. Explore sources, past findings, and the evidence behind every answer.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
       lang="en"
