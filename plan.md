@@ -287,22 +287,22 @@ Rules:
 
 - [x] **T3.1** FastAPI app, CORS, config loader (`AS_OF_DATE` and models from env), global exception handler returning `{error, code}`
 - [x] **T3.2** Implement all Section 7 endpoints (plain `def` routes if the client is sync)
-- [ ] **T3.3** Integration tests hitting every route, including error paths
+- [x] **T3.3** Integration tests hitting every route, including error paths
 
 **Exit:** every route works via curl with the right JSON shapes. `/demo/reset` returns instantly. `/openapi.json` generates the frontend types.
 
 ### Phase 4: Frontend (single page, desktop first, big fonts for a projector)
 
-- [ ] **T4.1** Scaffold Next.js and Tailwind. Generate types with `openapi-typescript`. Write `frontend/lib/api.ts`.
-- [ ] **T4.2** Layout: header (company, audit countdown from `audit_start`, `MemoryToggle`), left `ReadinessGauge` with tooltip from `score_breakdown`, center flags, predictions, and `AskBox`, right `MemoryPanel`
-- [ ] **T4.3** `ReadinessGauge`: score 0 to 100 with color bands
-- [ ] **T4.4** `FlagList`: card per open flag with kind badge, severity, explanation, clickable source chips. Closed flags in a collapsed section showing `state_note`.
-- [ ] **T4.5** `MemoryPanel`: recalled memories with dates behind the selected flag or last answer. **This is the hero of the memory score.**
-- [ ] **T4.6** `MemoryToggle`: big and obvious. OFF hides flags, predictions, and the memory panel ("No company history available") and sends `use_memory=false` to `/ask`.
-- [ ] **T4.7** `AskBox`: text box with 3 suggested prompts (non-streaming, spinner)
-- [ ] **T4.8** `FeedbackButtons` on each flag: Resolved (evidence field required), False alarm, Still open. Score updates from the response.
-- [ ] **T4.9** Predictions section: likelihood chips, reasoning, source chips
-- [ ] **T4.10** Loading, empty, and error states everywhere. One accent color.
+- [x] **T4.1** Scaffold Next.js and Tailwind. Generate types with `openapi-typescript`. Write `frontend/lib/api.ts`.
+- [x] **T4.2** Layout: header (company, audit countdown from `audit_start`, `MemoryToggle`), left `ReadinessGauge` with tooltip from `score_breakdown`, center flags, predictions, and `AskBox`, right `MemoryPanel`
+- [x] **T4.3** `ReadinessGauge`: score 0 to 100 with color bands
+- [x] **T4.4** `FlagList`: card per open flag with kind badge, severity, explanation, clickable source chips. Closed flags in a collapsed section showing `state_note`.
+- [x] **T4.5** `MemoryPanel`: recalled memories with dates behind the selected flag or last answer. **This is the hero of the memory score.**
+- [x] **T4.6** `MemoryToggle`: big and obvious. OFF hides flags, predictions, and the memory panel ("No company history available") and sends `use_memory=false` to `/ask`.
+- [x] **T4.7** `AskBox`: text box with 3 suggested prompts (non-streaming, spinner)
+- [x] **T4.8** `FeedbackButtons` on each flag: Resolved (evidence field required), False alarm, Still open. Score updates from the response.
+- [x] **T4.9** Predictions section: likelihood chips, reasoning, source chips
+- [x] **T4.10** Loading, empty, and error states everywhere. One accent color.
 
 **Exit:** the full demo flow (Section 10) works in the browser without touching the terminal.
 

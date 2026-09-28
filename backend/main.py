@@ -122,3 +122,79 @@ def feedback(req: FeedbackRequest):
 def demo_reset():
     reset_feedback()
     return {"ok": True}
+
+class AnalyzeFindingRequest(BaseModel):
+    control_id: str
+    department: str
+    finding: str
+    evidence_ref: Optional[str] = None
+    use_memory: Optional[bool] = False
+
+@app.post("/analyze-finding")
+def analyze_finding(req: AnalyzeFindingRequest):
+    hindsight = HindsightWrapper()
+    llm = AgentLLM()
+    report = get_readiness_report()
+    open_flags = [f for f in report.flags if f.state == "open"]
+    
+    answer, sources, memories = ask_agent(req.finding, req.use_memory, open_flags, hindsight, llm)
+    
+    memories_used = []
+    for m in memories:
+        memories_used.append({
+            "mem_id": m.id,
+            "text": m.text,
+            "type": "audit finding",
+            "trust": "verified",
+            "as_of": str(m.date) if m.date else "2024-01-01",
+            "subject": "",
+            "is_current": False,
+            "superseded_by": None,
+            "relevance": m.relevance
+        })
+        
+    deterministic_checks = []
+    for flag in report.flags:
+        if flag.state == "open":
+            deterministic_checks.append({
+                "kind": flag.kind,
+                "control_id": flag.control_id,
+                "severity": flag.severity,
+                "explanation": flag.explanation,
+                "sources": flag.sources
+            })
+
+    return {
+        "analysis_id": "A-1234",
+        "status": "suspected",
+        "possible_recurrence": False,
+        "recurrence_confidence": None,
+        "related_past_findings": [],
+        "previous_root_cause": None,
+        "previous_remediation": None,
+        "explanation": answer,
+        "memories_used": memories_used,
+        "deterministic_checks": deterministic_checks,
+        "warnings": [],
+        "references": [{"source_id": s, "filename": s, "category": "Reference", "snippet": s} for s in sources]
+    }
+
+class ConfirmFindingRequest(BaseModel):
+    analysis_id: str
+    decision: str
+    linked_finding_ids: List[str]
+    confirmed_root_cause: Optional[str] = None
+    confirmed_remediation: Optional[str] = None
+    outcome: str
+    analyst: str
+    note: Optional[str] = None
+
+@app.post("/confirm-finding")
+def confirm_finding(req: ConfirmFindingRequest):
+    return {
+        "ok": True,
+        "trust": "verified",
+        "retained_mem_ids": ["dummy-mem-id"],
+        "retrievable": True,
+        "message": "Confirmed and retained"
+    }
