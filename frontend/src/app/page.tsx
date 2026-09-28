@@ -633,7 +633,7 @@ export default function Home() {
               {!uploading && !!uploadIds.length && (
                 <p
                   className="inline-notice"
-                  style={{ color: "#4caf50", fontWeight: "bold" }}
+                  style={{ color: "#4caf50" }}
                 >
                   {uploadIds.length > 1
                     ? "These files have been uploaded successfully."
