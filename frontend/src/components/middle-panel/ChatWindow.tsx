@@ -7,9 +7,17 @@ import React from 'react';
 function formatTextWithCitations(text: string, references?: Reference[], onReference?: (r: Reference) => void) {
   if (!text) return text;
   
-  // Match [UUID] or just UUID
-  const uuidRegex = /\[?([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})\]?/g;
-  const parts = text.split(uuidRegex);
+  let allPatterns = ["[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"];
+  if (references && references.length > 0) {
+    const knownIds = references.map(r => r.id);
+    const knownPrefixes = references.map(r => r.id.substring(0, 8));
+    allPatterns = [...knownIds, ...knownPrefixes, ...allPatterns];
+  }
+  
+  const patternStr = allPatterns.join("|");
+  // Matches optional prefix (source, [, or 【 followed by ID/Prefix followed by optional suffix
+  const regex = new RegExp(`(?:\\(?source\\s*|\\[|【)?(${patternStr})(?:\\]|】|\\))?`, "gi");
+  const parts = text.split(regex);
   
   if (parts.length <= 1) return text; // No matches
   
@@ -18,14 +26,14 @@ function formatTextWithCitations(text: string, references?: Reference[], onRefer
     if (i % 2 === 0) {
       result.push(parts[i]);
     } else {
-      const uuid = parts[i];
-      const refIndex = references ? references.findIndex(r => r.id === uuid || r.sourceId === uuid) : -1;
+      const match = parts[i];
+      const refIndex = references ? references.findIndex(r => r.id.toLowerCase() === match.toLowerCase() || r.id.toLowerCase().startsWith(match.toLowerCase())) : -1;
       const displayNum = refIndex !== -1 ? refIndex + 1 : '*';
       const refObj = refIndex !== -1 && references ? references[refIndex] : undefined;
       
       result.push(
         <button 
-          key={uuid + i}
+          key={match + i}
           onClick={refObj && onReference ? () => onReference(refObj) : undefined}
           style={{
             display: 'inline-flex',
@@ -44,7 +52,7 @@ function formatTextWithCitations(text: string, references?: Reference[], onRefer
             outline: 'none',
             lineHeight: '1.2'
           }}
-          title={refObj ? refObj.title : `Source ID: ${uuid}`}
+          title={refObj ? refObj.title : `Source: ${match}`}
         >
           {displayNum}
         </button>
