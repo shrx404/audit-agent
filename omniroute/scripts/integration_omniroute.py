@@ -1,13 +1,13 @@
 import os
 import sys
 
-# Ensure backend package can be imported
+# Ensure omniroute package can be imported
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
 from dotenv import load_dotenv
-from backend.services.llm_client import LLMClient
+from omniroute.services.llm_client import LLMClient
 
 def test_integration():
-    # Load environment variables
+    # Load environment variables from the root .env file
     dotenv_path = os.path.join(os.path.dirname(__file__), "..", "..", ".env")
     load_dotenv(dotenv_path)
     
