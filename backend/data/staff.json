@@ -1,0 +1,17 @@
+[
+  { "name": "Arjun Mehta", "active": true, "departed_date": null },
+  { "name": "Priya Nair", "active": false, "departed_date": "2026-01-15" },
+  { "name": "Rahul Iyer", "active": true, "departed_date": null },
+  { "name": "Neha Sharma", "active": true, "departed_date": null },
+  { "name": "Amit Patel", "active": true, "departed_date": null },
+  { "name": "Kavita Singh", "active": true, "departed_date": null },
+  { "name": "Vikram Desai", "active": true, "departed_date": null },
+  { "name": "Sneha Reddy", "active": true, "departed_date": null },
+  { "name": "Rajiv Kapoor", "active": true, "departed_date": null },
+  { "name": "Anjali Joshi", "active": true, "departed_date": null },
+  { "name": "Sanjay Gupta", "active": true, "departed_date": null },
+  { "name": "Aditi Verma", "active": true, "departed_date": null },
+  { "name": "Michael Chen", "active": false, "departed_date": "2024-02-15" },
+  { "name": "Sarah Jenkins", "active": false, "departed_date": "2024-02-15" },
+  { "name": "David Smith", "active": false, "departed_date": "2024-02-15" }
+]

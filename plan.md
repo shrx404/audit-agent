@@ -11,7 +11,7 @@
 - Build phases in order, one task at a time. Tick the box, run the exit check, commit.
 - Do not wire the frontend to the backend until the Phase 2 exit check passes. A UI shell against mock JSON may start after Phase 0.
 - **[VERIFY]** marks things agents commonly get wrong. Check by hand against the real docs.
-- **Never guess SDK signatures.** Use `docs/hindsight-notes.md`. If something is missing there, run a tiny script to inspect the real object, write the result into the notes, then code.
+- **Never guess SDK signatures.** Use `backend/docs/hindsight-notes.md`. If something is missing there, run a tiny script to inspect the real object, write the result into the notes, then code.
 - Never let two agents edit the same files at once. Never paste API keys into prompts. Terminal policy: ask for anything risky.
 
 ---
@@ -44,7 +44,7 @@
 ```
 Next.js single page --REST--> FastAPI --> Hindsight Cloud (retain / recall / reflect)
                                      --> Groq LLM (JSON output, NO tool calling)
-                                     --> data/*.json (seed) + state/ (feedback, cache)
+                                     --> backend/data/*.json (seed) + backend/state/ (feedback, cache)
 ```
 
 | Layer    | Choice                                                                                                              |
@@ -53,7 +53,7 @@ Next.js single page --REST--> FastAPI --> Hindsight Cloud (retain / recall / ref
 | Backend  | Python 3.11+, FastAPI, Pydantic v2                                                                                  |
 | Memory   | Hindsight Cloud, `hindsight-client` Python SDK                                                                      |
 | LLM      | Groq. Primary `openai/gpt-oss-120b`. Fallback `qwen/qwen3.6-27b` **[VERIFY]**                                       |
-| Data     | JSON seed files, plus `state/feedback.json` and `state/cache.json` (gitignored)                                     |
+| Data     | JSON seed files, plus `backend/state/feedback.json` and `backend/state/cache.json` (gitignored)                                     |
 
 **LLM model warning:** Groq shut down `qwen/qwen3-32b` on 2026-07-17 (and `llama-3.3-70b-versatile` on 2026-08-16). Read primary and fallback from env (`LLM_PRIMARY_MODEL`, `LLM_FALLBACK_MODEL`) and check them against Groq's live model list at startup. Fail loudly if either is missing.
 
@@ -61,7 +61,7 @@ Next.js single page --REST--> FastAPI --> Hindsight Cloud (retain / recall / ref
 
 ## 3. Hindsight API Surface **[VERIFY]**
 
-Confirmed against the Hindsight Python client docs. Re-check before coding and paste the real notes into `docs/hindsight-notes.md`.
+Confirmed against the Hindsight Python client docs. Re-check before coding and paste the real notes into `backend/docs/hindsight-notes.md`.
 
 ```python
 from datetime import datetime
@@ -154,7 +154,7 @@ class ReadinessReport(BaseModel):
 | ------------------ | --------------------------------------------------------------------------------------------------------------- |
 | `repeat_finding`   | Control has findings in 2 or more distinct audit cycles AND its latest finding's remediation is not `verified`. |
 | `overdue_test`     | `(AS_OF_DATE - last_tested).days > required_frequency_days`                                                     |
-| `stale_ticket`     | Remediation `status == open` AND (open more than 180 days OR owner is not active in `staff.json`)               |
+| `stale_ticket`     | Remediation `status == open` AND (open more than 180 days OR owner is not active in `backend/data/staff.json`)               |
 | `done_no_evidence` | Remediation `status == done` AND `evidence_ref is None`                                                         |
 
 One flag per (kind, control). Flag severity comes from the linked finding; `overdue_test` defaults to medium.
@@ -173,14 +173,14 @@ Start at 100, subtract `kind_weight x severity_multiplier` for each **open** fla
 
 - `resolved` **requires** `evidence_ref` (else 400; resolving without evidence would just recreate trap D).
 - `false_alarm` removes the penalty. `still_open` reverts an earlier resolve or false alarm. Unknown `flag_id` gives 404.
-- `state/feedback.json` is authoritative for the instant score change. Also retain the event to Hindsight (`retain_async=True`, tag `user feedback`, `document_id` `FB-<session>-<n>`, session tag in the text).
+- `backend/state/feedback.json` is authoritative for the instant score change. Also retain the event to Hindsight (`retain_async=True`, tag `user feedback`, `document_id` `FB-<session>-<n>`, session tag in the text).
 - The response explanation is a template (no LLM): "Closed on 2026-09-28 with evidence EV-902. Score 59 to 66 (+7)."
 - Predictions react by rule: a resolved control's likelihood drops one level and the reasoning cites the feedback; a false-alarm control's prediction is removed.
-- `/demo/reset` clears `state/feedback.json` and bumps the session ID. Recall hits from earlier sessions are filtered out by the wrapper (or deleted by `document_id` if the API supports it). It does NOT reseed Hindsight.
+- `/demo/reset` clears `backend/state/feedback.json` and bumps the session ID. Recall hits from earlier sessions are filtered out by the wrapper (or deleted by `document_id` if the API supports it). It does NOT reseed Hindsight.
 
 ### 5.5 Performance rule
 
-Evidence recall, reflect, and prediction LLM calls are slow. Run them once, save to `state/cache.json`, and reuse. Feedback only re-applies state and recomputes the score, so it returns instantly. The cache also serves as the offline fallback if Hindsight or Groq is down mid-demo. A missing cache is rebuilt lazily on the first `/readiness` call; pre-warm it before demos.
+Evidence recall, reflect, and prediction LLM calls are slow. Run them once, save to `backend/state/cache.json`, and reuse. Feedback only re-applies state and recomputes the score, so it returns instantly. The cache also serves as the offline fallback if Hindsight or Groq is down mid-demo. A missing cache is rebuilt lazily on the first `/readiness` call; pre-warm it before demos.
 
 ---
 
@@ -188,9 +188,9 @@ Evidence recall, reflect, and prediction LLM calls are slow. Run them once, save
 
 ### 6.1 Volume and sources
 
-- `controls.json`: about 12 controls, **hand-written** with real SOC 2 IDs (CC6.1, CC6.2, CC7.1, CC8.1, CC9.2, A1.3, and so on) and your own descriptions (AICPA text is copyrighted). Do not depend on any external control set.
+- `backend/data/controls.json`: about 12 controls, **hand-written** with real SOC 2 IDs (CC6.1, CC6.2, CC7.1, CC8.1, CC9.2, A1.3, and so on) and your own descriptions (AICPA text is copyrighted). Do not depend on any external control set.
 - Verify each ID and name against a real SOC 2 control list. Example of a bug in an earlier draft: CC7.2 is anomaly monitoring, not backups. Backup restore testing belongs to A1.3.
-- `findings.json` 12 to 16, `remediations.json` 10 to 14, `control_tests.json` about 12, `staff.json` about 15 (at least 3 departed), `policy_changes.json` 3 to 4, `org_events.json` 3.
+- `backend/data/findings.json` 12 to 16, `backend/data/remediations.json` 10 to 14, `backend/data/control_tests.json` about 12, `backend/data/staff.json` about 15 (at least 3 departed), `backend/data/policy_changes.json` 3 to 4, `backend/data/org_events.json` 3.
 - Quality beats quantity. Reflect needs enough cross-year signal for one story: reorg, then departed admins, then access findings recur.
 
 ### 6.2 The four traps and the decoy (hand-write these records; compute dates from `AS_OF_DATE`)
@@ -201,13 +201,13 @@ Each trap lives on a different control so flags do not overlap.
 | ------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
 | **A: Repeat finding**           | CC6.2   | Access review finding in 2023 (fixed) and again 2024-03. Reorg 2024-02 removed 3 admins. Latest ticket REM-118 `done` with evidence but never `verified`. Policy v3 (monthly reviews) 2024-09. | `repeat_finding:CC6.2`   |
 | **B: Overdue test**             | A1.3    | Backup restore test last run `AS_OF_DATE - 427 days`, frequency 365 (overdue by 62 days)                                                                                                       | `overdue_test:A1.3`      |
-| **C: Stale ticket**             | CC9.2   | Vendor risk finding 2025-11. Ticket opened `AS_OF_DATE - 270 days`, still `open`, owner departed 2026-01-15 per `staff.json`                                                                   | `stale_ticket:CC9.2`     |
+| **C: Stale ticket**             | CC9.2   | Vendor risk finding 2025-11. Ticket opened `AS_OF_DATE - 270 days`, still `open`, owner departed 2026-01-15 per `backend/data/staff.json`                                                                   | `stale_ticket:CC9.2`     |
 | **D: Done with no evidence**    | CC7.1   | Vulnerability management finding in 2025. Ticket `done`, `marked_done_date` set, `evidence_ref = null`                                                                                         | `done_no_evidence:CC7.1` |
 | **Decoy (must NOT be flagged)** | CC8.1   | High severity change management findings in 2023 AND 2024 (looks like a repeat), but the latest ticket is `verified` with evidence and the 2025 retest passed                                  | none                     |
 
 ### 6.3 Generation approach
 
-1. Hand-write trap, decoy, and `staff.json` records first.
+1. Hand-write trap, decoy, and `backend/data/staff.json` records first.
 2. LLM generates only the background records and auditor prose, as hard-constrained JSON. Background records must be clean: tickets verified or done with evidence, tests inside their frequency, no other multi-cycle unverified controls.
 3. `validate_data.py` (T1.4) checks the data. The rule engine check (exactly four flags) runs in the T2.2 tests.
 4. A human reads the whole dataset once.
@@ -241,8 +241,8 @@ Rules:
 ### Phase 0: Setup
 
 - [ ] **T0.1** Human: create Hindsight Cloud and Groq accounts and keys, apply the promo code (Section 3)
-- [ ] **T0.2** Repo skeleton (`backend/`, `frontend/`, `data/`, `scripts/`, `docs/`, `state/`), `.gitignore` with `.env` and `state/`, `.env.example` with `HINDSIGHT_BASE_URL`, `HINDSIGHT_API_KEY`, `HINDSIGHT_BANK_ID`, `GROQ_API_KEY`, `LLM_PRIMARY_MODEL`, `LLM_FALLBACK_MODEL`, `AS_OF_DATE`, `NEXT_PUBLIC_API_URL`
-- [ ] **T0.3** Hindsight hello-world script (create bank, retain, recall, reflect). Print the raw result objects and write everything learned into `docs/hindsight-notes.md`. **This is the go/no-go check.**
+- [ ] **T0.2** Repo skeleton (`backend/`, `frontend/`, `backend/data/`, `backend/scripts/`, `backend/docs/`, `backend/state/`), `.gitignore` with `.env` and `backend/state/`, `.env.example` with `HINDSIGHT_BASE_URL`, `HINDSIGHT_API_KEY`, `HINDSIGHT_BANK_ID`, `GROQ_API_KEY`, `LLM_PRIMARY_MODEL`, `LLM_FALLBACK_MODEL`, `AS_OF_DATE`, `NEXT_PUBLIC_API_URL`
+- [ ] **T0.3** Hindsight hello-world script (create bank, retain, recall, reflect). Print the raw result objects and write everything learned into `backend/docs/hindsight-notes.md`. **This is the go/no-go check.**
 - [ ] **T0.4** Groq hello-world: list models, confirm both configured models exist, one JSON-output call with each
 - [ ] **T0.5** Freeze schemas (5.1) and contract (Section 7). Copy the rules from Section 9 into `AGENTS.md` and commit
 
@@ -250,15 +250,15 @@ Rules:
 
 ### Phase 1: Data and Memory Loop
 
-- [ ] **T1.1** `data/controls.json` (Section 6.1)
+- [ ] **T1.1** `backend/data/backend/data/controls.json` (Section 6.1)
 - [ ] **T1.2** Hand-write trap, decoy, and staff records (Section 6.2)
-- [ ] **T1.3** `scripts/generate_data.py`: background records and prose via LLM, merged with the hand-written ones
-- [ ] **T1.4** `scripts/validate_data.py`: references valid, dates ordered (ticket after finding, done after opened), `audit_cycle == raised_date.year`, ID formats, all traps and the decoy present
+- [ ] **T1.3** `backend/scripts/generate_data.py`: background records and prose via LLM, merged with the hand-written ones
+- [ ] **T1.4** `backend/scripts/validate_data.py`: references valid, dates ordered (ticket after finding, done after opened), `audit_cycle == raised_date.year`, ID formats, all traps and the decoy present
 - [ ] **T1.5** Human read-through and fixes
-- [ ] **T1.6** `memory/formatter.py`: record to memory text (Section 4 rules)
-- [ ] **T1.7** `memory/client.py`: thin wrapper with retry on transient errors, 401/402/404 mapped to clear errors, hits normalized to `MemoryHit`, session filter for feedback memories
-- [ ] **T1.8** `memory/seed.py` and `scripts/seed_memory.py`: create bank, retain every record synchronously with `document_id` and timestamp. Idempotent via `document_id` upsert if verified, otherwise delete and recreate the bank. Also retain staff departures.
-- [ ] **T1.9** `scripts/smoke_test.py`. Recall results must contain these record IDs somewhere in the top 10:
+- [ ] **T1.6** `backend/memory/formatter.py`: record to memory text (Section 4 rules)
+- [ ] **T1.7** `backend/memory/client.py`: thin wrapper with retry on transient errors, 401/402/404 mapped to clear errors, hits normalized to `MemoryHit`, session filter for feedback memories
+- [ ] **T1.8** `backend/memory/seed.py` and `backend/scripts/seed_memory.py`: create bank, retain every record synchronously with `document_id` and timestamp. Idempotent via `document_id` upsert if verified, otherwise delete and recreate the bank. Also retain staff departures.
+- [ ] **T1.9** `backend/scripts/smoke_test.py`. Recall results must contain these record IDs somewhere in the top 10:
   - "access review findings" returns both CC6.2 findings (2023 and 2024)
   - "backup restore test" returns the A1.3 test
   - "vendor risk ticket" returns the CC9.2 ticket
@@ -269,16 +269,16 @@ Rules:
 
 ### Phase 2: Agent Brain
 
-- [ ] **T2.1** `agent/llm.py`: Groq client, JSON output validated with Pydantic, **no tool calling**. Exponential backoff (3 attempts) on 429/5xx, 30s timeout. On JSON parse failure: strip code fences, re-ask once with "return valid JSON only", then the fallback model, then return a clear error object (never crash).
-- [ ] **T2.2** `agent/detect.py` (Section 5.2) plus unit tests: each trap, the decoy, edge cases, and an integration test that `detect()` over the real seed data returns **exactly** the four trap flag IDs and nothing else
-- [ ] **T2.3** `agent/readiness.py` (Section 5.3) plus tests
-- [ ] **T2.4** `agent/prompts.py`: force citations ("every claim must cite a source ID; if none, say you do not know")
-- [ ] **T2.5** `agent/predict.py`: per flagged control, recall related history and attach as `Flag.memories`. One reflect call for cross-year patterns. The LLM builds `Prediction` objects from recalled memories plus the reflect text. Drop predictions with no valid source.
-- [ ] **T2.6** `agent/state.py`: feedback state, overlay onto the report, and the reset logic (Section 5.4), plus tests
-- [ ] **T2.7** `agent/ask.py`: memory ON and OFF behavior (Section 7)
-- [ ] **T2.8** `state/cache.json` build and load (Section 5.5)
+- [ ] **T2.1** `backend/agent/llm.py`: Groq client, JSON output validated with Pydantic, **no tool calling**. Exponential backoff (3 attempts) on 429/5xx, 30s timeout. On JSON parse failure: strip code fences, re-ask once with "return valid JSON only", then the fallback model, then return a clear error object (never crash).
+- [ ] **T2.2** `backend/agent/detect.py` (Section 5.2) plus unit tests: each trap, the decoy, edge cases, and an integration test that `detect()` over the real seed data returns **exactly** the four trap flag IDs and nothing else
+- [ ] **T2.3** `backend/agent/readiness.py` (Section 5.3) plus tests
+- [ ] **T2.4** `backend/agent/prompts.py`: force citations ("every claim must cite a source ID; if none, say you do not know")
+- [ ] **T2.5** `backend/agent/predict.py`: per flagged control, recall related history and attach as `Flag.memories`. One reflect call for cross-year patterns. The LLM builds `Prediction` objects from recalled memories plus the reflect text. Drop predictions with no valid source.
+- [ ] **T2.6** `backend/agent/state.py`: feedback state, overlay onto the report, and the reset logic (Section 5.4), plus tests
+- [ ] **T2.7** `backend/agent/ask.py`: memory ON and OFF behavior (Section 7)
+- [ ] **T2.8** `backend/state/cache.json` build and load (Section 5.5)
 - [ ] **T2.9** Edge cases: empty recall says "no history found" and never invents; Hindsight unreachable returns a clear error and the cached report if present; malformed LLM JSON follows T2.1; unknown control ID in a question gets a polite answer
-- [ ] **T2.10** `scripts/phase2_check.py` (the exit check below, automated)
+- [ ] **T2.10** `backend/scripts/phase2_check.py` (the exit check below, automated)
 
 **Exit:** with memory ON the report has exactly the four expected open flags, each with valid sources and recalled memories, and no decoy flag. With memory OFF, `/ask` returns generic advice with empty sources. After `resolved` on `repeat_finding:CC6.2` with an evidence ID, the score rises, the explanation cites the evidence and date, and the CC6.2 prediction drops. `false_alarm` removes a penalty. Reset restores the original score.
 
@@ -292,7 +292,7 @@ Rules:
 
 ### Phase 4: Frontend (single page, desktop first, big fonts for a projector)
 
-- [ ] **T4.1** Scaffold Next.js and Tailwind. Generate types with `openapi-typescript`. Write `lib/api.ts`.
+- [ ] **T4.1** Scaffold Next.js and Tailwind. Generate types with `openapi-typescript`. Write `frontend/lib/api.ts`.
 - [ ] **T4.2** Layout: header (company, audit countdown from `audit_start`, `MemoryToggle`), left `ReadinessGauge` with tooltip from `score_breakdown`, center flags, predictions, and `AskBox`, right `MemoryPanel`
 - [ ] **T4.3** `ReadinessGauge`: score 0 to 100 with color bands
 - [ ] **T4.4** `FlagList`: card per open flag with kind badge, severity, explanation, clickable source chips. Closed flags in a collapsed section showing `state_note`.
@@ -309,7 +309,7 @@ Rules:
 
 - [ ] **T5.1** README with a specific "How Hindsight memory is used" section (Section 4 text, the memory table, recall queries, reflect use, feedback retention, memory ON vs OFF screenshots), setup, seed, run, reset, tests, limitations, data sources (real SOC 2 IDs, synthetic history)
 - [ ] **T5.2** Run the demo 3 times with `/demo/reset` before each. Cut anything that drags.
-- [ ] **T5.3** Confirm `state/cache.json` fallback works with the network off
+- [ ] **T5.3** Confirm `backend/state/cache.json` fallback works with the network off
 - [ ] **T5.4** Check no secrets in git history (rotate keys if any were committed), clean repo, tag `v1.0-mvp`
 
 **Human-only deliverables (not agent work, do not forget):** demo video, backup demo video, and per team member an Article, a Social post, and a Video from the official content guide.
@@ -319,12 +319,12 @@ Rules:
 ## 9. Rules For AGENTS.md (copy verbatim)
 
 - Stack: Python 3.11+, FastAPI, Pydantic v2, `hindsight-client`, Groq, Next.js, TypeScript, Tailwind.
-- Use only Hindsight methods documented in `docs/hindsight-notes.md`. Never guess signatures.
+- Use only Hindsight methods documented in `backend/docs/hindsight-notes.md`. Never guess signatures.
 - Never call `date.today()` or `datetime.now()` for business logic. Use `AS_OF_DATE` from config.
 - Every flag, prediction, and answer must carry source IDs that exist in the record index. Drop anything unsourced.
 - Never invent history. Empty recall means say "no history found".
 - Groq: JSON output plus Pydantic validation. No function or tool calling.
-- Never commit secrets or print API keys. `.env` and `state/` stay gitignored.
+- Never commit secrets or print API keys. `.env` and `backend/state/` stay gitignored.
 - Write tests for detection, scoring, and feedback logic.
 - Stay inside the MVP scope. Do not add backlog items.
 

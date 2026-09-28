@@ -1,0 +1,10 @@
+- Stack: Python 3.11+, FastAPI, Pydantic v2, `hindsight-client`, Groq, Next.js, TypeScript, Tailwind.
+- Use only Hindsight methods documented in `backend/docs/hindsight-notes.md`. Never guess signatures.
+- Never call `date.today()` or `datetime.now()` for business logic. Use `AS_OF_DATE` from config.
+- Every flag, prediction, and answer must carry source IDs that exist in the record index. Drop anything unsourced.
+- Never invent history. Empty recall means say "no history found".
+- Groq: JSON output plus Pydantic validation. No function or tool calling.
+- Never commit secrets or print API keys. `.env` and `backend/state/` stay gitignored.
+- Write tests for detection, scoring, and feedback logic.
+- Stay inside the MVP scope. Do not add backlog items.
+- Always use `uv` as the Python package manager.
