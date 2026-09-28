@@ -5,3 +5,4 @@ __pycache__/
 .env
 backend/state/
 .DS_Store
+backend/data/uploaded_sources.json
