@@ -118,7 +118,10 @@ async def upload_file(file: UploadFile = File(...)):
     as_of_date = datetime.strptime(d_str, "%Y-%m-%d")
     
     doc_id = f"local:{uuid.uuid4()}"
-    hindsight.retain(
+    
+    from fastapi.concurrency import run_in_threadpool
+    await run_in_threadpool(
+        hindsight.retain,
         content=content_str,
         context=f"Uploaded document: {file.filename}",
         timestamp=as_of_date,
