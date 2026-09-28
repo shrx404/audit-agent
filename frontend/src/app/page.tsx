@@ -13,12 +13,12 @@ import {
   fileExtension,
 } from "../lib/sources";
 import type {
+  Analysis,
   ConfirmationRequest,
   Message,
   Reference,
   SourceCategory,
   SourceRecord,
-  ReadinessReport,
 } from "../types/audit";
 
 type Modal =
@@ -30,12 +30,46 @@ type Modal =
   | "reference"
   | "case"
   | null;
+
+function Resizer({
+  isLeft,
+  width,
+  setWidth,
+}: {
+  isLeft: boolean;
+  width: number;
+  setWidth: (w: number) => void;
+}) {
+  return (
+    <div
+      className="panel-resizer"
+      onMouseDown={(e) => {
+        e.preventDefault();
+        const startX = e.clientX;
+        const startWidth = width;
+        const onMouseMove = (moveEvent: MouseEvent) => {
+          const delta = moveEvent.clientX - startX;
+          const newWidth = isLeft ? startWidth + delta : startWidth - delta;
+          setWidth(Math.max(180, Math.min(newWidth, 600)));
+        };
+        const onMouseUp = () => {
+          window.removeEventListener("mousemove", onMouseMove);
+          window.removeEventListener("mouseup", onMouseUp);
+          document.body.style.cursor = "";
+        };
+        window.addEventListener("mousemove", onMouseMove);
+        window.addEventListener("mouseup", onMouseUp);
+        document.body.style.cursor = "col-resize";
+      }}
+    />
+  );
+}
+
 export default function Home() {
   const [sources, setSources] = useState(seedSources);
   const [memory, setMemory] = useState(true);
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
-  const [readiness, setReadiness] = useState<ReadinessReport | null>(null);
   const [activeId, setActiveId] = useState("");
   const [selected, setSelected] = useState<SourceRecord | null>(null);
   const [modal, setModal] = useState<Modal>(null);
@@ -43,6 +77,8 @@ export default function Home() {
   const [pendingQuestion, setPendingQuestion] = useState("");
   const [control, setControl] = useState("");
   const [department, setDepartment] = useState("");
+  const [leftWidth, setLeftWidth] = useState(250);
+  const [rightWidth, setRightWidth] = useState(250);
   const [uploadCategory, setUploadCategory] =
     useState<SourceCategory>("Findings");
   const [uploadError, setUploadError] = useState("");
@@ -61,19 +97,6 @@ export default function Home() {
     if (modal) dialog.current?.showModal();
     else dialog.current?.close();
   }, [modal]);
-  useEffect(() => {
-    const fetchReadiness = async () => {
-      try {
-        const res = await fetch("/api/readiness");
-        if (res.ok) {
-          setReadiness(await res.json());
-        }
-      } catch (e) {
-        console.error(e);
-      }
-    };
-    fetchReadiness();
-  }, []);
   const busy = confirmationBusy || uploading;
   function closeModal() {
     if (!busy) setModal(null);
@@ -130,6 +153,74 @@ export default function Home() {
       }
 
       const id = crypto.randomUUID();
+
+      let mockAnalysis: Analysis | undefined = undefined;
+      if (question.toLowerCase().includes("compare") || question.toLowerCase().includes("previous")) {
+        mockAnalysis = {
+          analysis_id: "mock-1",
+          status: "suspected",
+          possible_recurrence: true,
+          recurrence_confidence: "high",
+          previous_root_cause: null,
+          previous_remediation: null,
+          explanation: "Mock analysis.",
+          memories_used: [
+            { mem_id: "m1", text: "Finding F-2023-01: Inadequate access revocation.", type: "audit finding", trust: "high", as_of: "2023", subject: "F-2023-01", is_current: false, superseded_by: null, relevance: null }
+          ],
+          related_past_findings: [
+            { 
+              finding_id: "F-2023-01", 
+              control_id: "AC-01",
+              department: "IT",
+              raised_date: "2023-01-01",
+              summary: "Inadequate access revocation for departing employees.",
+              same_control_id: true,
+              memory_ids: ["m1"],
+              is_recurrence_candidate: true,
+              comparison: {
+                "F-2024-03": { rating: "match", reason: "Both involve delayed access revocation." }
+              }
+            }
+          ],
+          deterministic_checks: [],
+          warnings: []
+        };
+      }
+
+      const newReferences: Reference[] = [];
+      if (data.sources && Array.isArray(data.sources)) {
+        for (const sourceId of data.sources) {
+          const sourceObj = sources.find((s) => s.id === sourceId);
+          if (sourceObj) {
+            newReferences.push({
+              id: sourceId,
+              sourceId: sourceId,
+              title: sourceObj.title,
+              category: sourceObj.category,
+              location: "",
+              snippet: sourceObj.content ? sourceObj.content.slice(0, 300) : "",
+              historical: false,
+            });
+            continue;
+          }
+          
+          if (data.memories && Array.isArray(data.memories)) {
+            const memObj = data.memories.find((m: any) => m.id === sourceId);
+            if (memObj) {
+              newReferences.push({
+                id: memObj.id,
+                sourceId: memObj.id,
+                title: memObj.type || "Historical Context",
+                category: "Memory",
+                location: memObj.date || "",
+                snippet: memObj.text,
+                historical: true,
+              });
+            }
+          }
+        }
+      }
+
       setMessages((m) => [
         ...m,
         {
@@ -138,7 +229,9 @@ export default function Home() {
           text: data.answer,
           sources: data.sources,
           memories: data.memories,
+          references: newReferences,
           memoryEnabled: useMemory,
+          analysis: mockAnalysis,
         },
       ]);
       setActiveId(id);
@@ -282,7 +375,10 @@ export default function Home() {
           </button>
         ))}
       </nav>
-      <main className={`workspace show-${mobileTab}`}>
+      <main 
+        className={`workspace show-${mobileTab}`}
+        style={{ gridTemplateColumns: `minmax(0, ${leftWidth}px) 4px 1fr 4px minmax(0, ${rightWidth}px)` }}
+      >
         <SourceDataCorpus
           sources={sources}
           selected={selected?.id || ""}
@@ -292,6 +388,7 @@ export default function Home() {
             setModal("upload");
           }}
         />
+        <Resizer isLeft={true} width={leftWidth} setWidth={setLeftWidth} />
         <section className="chat-panel" aria-label="Audit Memory chat">
           <Header onSettings={() => setModal("settings")} />
           <ChatWindow
@@ -308,11 +405,11 @@ export default function Home() {
             onSelectAnswer={(m) => setActiveId(m.id)}
           />
         </section>
+        <Resizer isLeft={false} width={rightWidth} setWidth={setRightWidth} />
         <MemoryPanel
           references={active?.references || []}
           analysis={active?.analysis}
           memories={active?.memories}
-          readiness={readiness}
           allowHistory={memory && !!active?.memoryEnabled}
           onReference={showReference}
           onCase={(id) => {
