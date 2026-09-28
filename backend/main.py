@@ -110,6 +110,9 @@ async def upload_file(file: UploadFile = File(...)):
             content_str = "[Failed to extract DOCX text]"
     else:
         content_str = content_bytes.decode('utf-8', errors='ignore')
+        
+    if len(content_str) > 100000:
+        content_str = content_str[:100000] + "\n...[Content truncated for size]..."
     
     d_str = os.environ.get("AS_OF_DATE", "2026-09-28")
     as_of_date = datetime.strptime(d_str, "%Y-%m-%d")

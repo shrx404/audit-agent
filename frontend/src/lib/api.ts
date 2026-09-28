@@ -211,8 +211,7 @@ export class AuditApi {
       );
     return result as unknown as ConfirmationResult;
   }
-  async upload(file: File): Promise<{ source_id: string }> {
-    // No ingestion route exists in the current MVP contract. Configure the real route and field after integrating the backend.
+  async upload(file: File, onProgress?: (pct: number) => void): Promise<{ source_id: string }> {
     const path = process.env.NEXT_PUBLIC_SOURCE_UPLOAD_PATH || "/upload";
     const field = process.env.NEXT_PUBLIC_SOURCE_UPLOAD_FIELD || "file";
     if (!path || !field || !path.startsWith("/") || path.startsWith("//"))
@@ -221,16 +220,39 @@ export class AuditApi {
       );
     const body = new FormData();
     body.append(field, file);
-    const result = await this.request(path, { method: "POST", body });
-    if (
-      !object(result) ||
-      result.indexed !== true ||
-      typeof result.source_id !== "string"
-    )
-      throw new Error(
-        "The backend has not confirmed that this file was indexed. You can retry when indexing is available.",
-      );
-    return { source_id: result.source_id };
+    
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", `${this.base}${path}`);
+      
+      if (onProgress) {
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable) {
+            onProgress(Math.round((e.loaded / e.total) * 100));
+          }
+        };
+      }
+      
+      xhr.onload = () => {
+        try {
+          const result = JSON.parse(xhr.responseText);
+          if (xhr.status >= 200 && xhr.status < 300) {
+            if (!result || result.indexed !== true || typeof result.source_id !== "string") {
+              reject(new Error("The backend has not confirmed that this file was indexed."));
+            } else {
+              resolve({ source_id: result.source_id });
+            }
+          } else {
+            reject(new Error(result.error || `The request could not be completed (${xhr.status}).`));
+          }
+        } catch {
+          reject(new Error("The audit agent returned an invalid response."));
+        }
+      };
+      
+      xhr.onerror = () => reject(new Error("The audit agent could not be reached. Check the connection and try again."));
+      xhr.send(body);
+    });
   }
   async ask(question: string, useMemory: boolean): Promise<{ answer: string; sources: string[]; memories: MemoryHit[] }> {
     const result = await this.request("/ask", {
@@ -254,5 +276,5 @@ export class AuditApi {
   }
 }
 export const auditApi = new AuditApi(
-  process.env.NEXT_PUBLIC_API_URL || "/api",
+  process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000",
 );

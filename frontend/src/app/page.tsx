@@ -84,6 +84,7 @@ export default function Home() {
     useState<SourceCategory>("Findings");
   const [uploadError, setUploadError] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadIds, setUploadIds] = useState<string[]>([]);
   const [reviewMessage, setReviewMessage] = useState<Message | null>(null);
   const [confirmationBusy, setConfirmationBusy] = useState(false);
@@ -317,8 +318,9 @@ export default function Home() {
     setSources((items) =>
       items.map((s) => (s.id === source.id ? { ...s, status: "indexing" } : s)),
     );
+    setUploadProgress(0);
     try {
-      const result = await auditApi.upload(file);
+      const result = await auditApi.upload(file, setUploadProgress);
       setSources((items) =>
         items.map((s) =>
           s.id === source.id
@@ -347,6 +349,7 @@ export default function Home() {
     if (!files?.length || uploading) return;
     setUploadError("");
     setUploading(true);
+    setUploadProgress(0);
     try {
       for (const file of Array.from(files)) {
         if (file.size > 10 * 1024 * 1024) {
@@ -672,10 +675,13 @@ export default function Home() {
               />
               {uploading && (
                 <div className="upload-progress-bar">
-                  <div className="upload-progress-bar-inner"></div>
+                  <div
+                    className="upload-progress-bar-inner"
+                    style={{ width: `${uploadProgress}%`, animation: "none", transition: "width 0.2s" }}
+                  ></div>
                 </div>
               )}
-              {!uploading && !!uploadIds.length && (
+              {!uploading && !!uploadIds.length && !uploadError && (
                 <p
                   className="inline-notice"
                   style={{
