@@ -22,7 +22,7 @@ app = FastAPI(title="AuditMemory API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[os.environ.get("NEXT_PUBLIC_API_URL", "http://localhost:3000")],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

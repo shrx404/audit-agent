@@ -71,4 +71,4 @@ export class AuditApi {
     return {source_id:result.source_id};
   }
 }
-export const auditApi = new AuditApi(process.env.NEXT_PUBLIC_API_URL || '');
+export const auditApi = new AuditApi(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000');
