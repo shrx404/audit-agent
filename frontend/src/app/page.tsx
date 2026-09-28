@@ -104,7 +104,7 @@ export default function Home() {
     setLoading(true);
     setActiveId("");
     setModal(null);
-    
+
     // Create finding input
     const mentioned = sources.find(
       (s) => question.includes(s.id) && s.origin !== "local",
@@ -119,13 +119,16 @@ export default function Home() {
       const res = await fetch("/api/ask", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: finalQuestion, use_memory: useMemory }),
+        body: JSON.stringify({
+          question: finalQuestion,
+          use_memory: useMemory,
+        }),
       });
       const data = await res.json();
       if (!res.ok) {
         throw new Error(data.error || "An error occurred");
       }
-      
+
       const id = crypto.randomUUID();
       setMessages((m) => [
         ...m,
@@ -140,7 +143,8 @@ export default function Home() {
       ]);
       setActiveId(id);
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to fetch response.";
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to fetch response.";
       setMessages((m) => [
         ...m,
         {
@@ -214,12 +218,6 @@ export default function Home() {
     setUploading(true);
     try {
       for (const file of Array.from(files)) {
-        if (!isSupportedFile(file.name)) {
-          setUploadError(
-            "Supported files: TXT, Markdown, DOC, DOCX, and PDF. Other files were skipped.",
-          );
-          continue;
-        }
         if (file.size > 10 * 1024 * 1024) {
           setUploadError(
             "Files must be 10 MB or smaller. Larger files were skipped.",
@@ -248,6 +246,7 @@ export default function Home() {
         if (process.env.NEXT_PUBLIC_SOURCE_UPLOAD_PATH)
           await indexSource(source, file);
       }
+      await new Promise((resolve) => setTimeout(resolve, 1500));
     } finally {
       setUploading(false);
       if (fileInput.current) fileInput.current.value = "";
@@ -508,25 +507,7 @@ export default function Home() {
                 Add documents to your workspace. Connected source indexing
                 extracts text and makes the source available for retrieval.
               </p>
-              <label>
-                Folder
-                <select
-                  value={uploadCategory}
-                  onChange={(e) =>
-                    setUploadCategory(e.target.value as SourceCategory)
-                  }
-                >
-                  {[
-                    "Policies",
-                    "Findings",
-                    "Remediations",
-                    "Access Reviews",
-                    "Past Cases",
-                  ].map((c) => (
-                    <option key={c}>{c}</option>
-                  ))}
-                </select>
-              </label>
+
               <button
                 className="upload-zone"
                 onClick={() => fileInput.current?.click()}
@@ -536,20 +517,29 @@ export default function Home() {
                 <strong>
                   {uploading ? "Adding sources…" : "Choose source files"}
                 </strong>
-                <span>TXT, MD, DOC, DOCX, PDF · up to 10 MB</span>
+                <span>Any file type · up to 10 MB</span>
               </button>
               <input
                 ref={fileInput}
                 type="file"
                 hidden
                 multiple
-                accept=".txt,.md,.doc,.docx,.pdf"
+                accept="*/*"
                 onChange={(e) => void addFiles(e.target.files)}
               />
-              {!process.env.NEXT_PUBLIC_SOURCE_UPLOAD_PATH && (
-                <p className="inline-notice">
-                  Indexing is not connected yet. Added files stay in this
-                  session and are not available for historical retrieval.
+              {uploading && (
+                <div className="upload-progress-bar">
+                  <div className="upload-progress-bar-inner"></div>
+                </div>
+              )}
+              {!uploading && !!uploadIds.length && (
+                <p
+                  className="inline-notice"
+                  style={{ color: "#4caf50", fontWeight: "bold" }}
+                >
+                  {uploadIds.length > 1
+                    ? "These files have been uploaded successfully."
+                    : "This file has been uploaded successfully."}
                 </p>
               )}
               {!!uploadIds.length && (
@@ -560,13 +550,7 @@ export default function Home() {
                       <li key={s.id}>
                         <DocumentIcon filename={s.title} />
                         <span>{s.title}</span>
-                        <small>
-                          {s.status === "indexed"
-                            ? "Indexed"
-                            : s.status === "indexing"
-                              ? "Indexing…"
-                              : "Not indexed"}
-                        </small>
+
                         {s.status === "failed" &&
                           localFiles.current.has(s.id) && (
                             <button
