@@ -1,11 +1,12 @@
 import os
 import json
 from dotenv import load_dotenv
-import groq
+import sys
+sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
+
+from backend.services.llm_client import LLMClient
 
 load_dotenv()
-API_KEY = os.getenv("GROQ_API_KEY")
-MODEL = os.getenv("LLM_PRIMARY_MODEL", "openai/gpt-oss-120b")
 AS_OF_DATE = os.getenv("AS_OF_DATE", "2026-09-28")
 
 def read_json(filepath):
@@ -17,11 +18,7 @@ def write_json(filepath, data):
         json.dump(data, f, indent=2)
 
 def main():
-    if not API_KEY or API_KEY == "your_groq_api_key":
-        print("Please set GROQ_API_KEY in .env to run generator")
-        return
-
-    client = groq.Groq(api_key=API_KEY)
+    client = LLMClient()
     
     data_dir = os.path.join(os.path.dirname(__file__), "..", "data")
     controls = read_json(os.path.join(data_dir, "controls.json"))
@@ -54,12 +51,11 @@ Output JSON only.
 """
     print("Calling Groq...")
     try:
-        response = client.chat.completions.create(
-            model=MODEL,
+        response_text = client.chat_completion(
             messages=[{"role": "user", "content": prompt}],
             response_format={"type": "json_object"}
         )
-        result = json.loads(response.choices[0].message.content)
+        result = json.loads(response_text)
         
         # Merge
         findings.extend(result.get("findings", []))
