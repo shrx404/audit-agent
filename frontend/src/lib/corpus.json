@@ -1,0 +1,285 @@
+{
+  "findings": [
+    {
+      "id": "F-2023-01",
+      "control_id": "CC6.2",
+      "control_name": "User Access Reviews",
+      "severity": "medium",
+      "raised_date": "2023-04-10",
+      "audit_cycle": 2023,
+      "auditor_note": "Quarterly access reviews were not completed for the Q1 2023 period."
+    },
+    {
+      "id": "F-2024-03",
+      "control_id": "CC6.2",
+      "control_name": "User Access Reviews",
+      "severity": "high",
+      "raised_date": "2024-03-12",
+      "audit_cycle": 2024,
+      "auditor_note": "Management did not perform required user access reviews during the audit period."
+    },
+    {
+      "id": "F-2025-11",
+      "control_id": "CC9.2",
+      "control_name": "Vendor Risk Management",
+      "severity": "medium",
+      "raised_date": "2025-11-20",
+      "audit_cycle": 2025,
+      "auditor_note": "Annual vendor risk assessments were not completed for three critical vendors."
+    },
+    {
+      "id": "F-2025-05",
+      "control_id": "CC7.1",
+      "control_name": "Vulnerability Management",
+      "severity": "high",
+      "raised_date": "2025-05-15",
+      "audit_cycle": 2025,
+      "auditor_note": "Critical vulnerabilities identified in external penetration test were not remediated within the SLA."
+    },
+    {
+      "id": "F-2023-08",
+      "control_id": "CC8.1",
+      "control_name": "Change Management",
+      "severity": "high",
+      "raised_date": "2023-10-05",
+      "audit_cycle": 2023,
+      "auditor_note": "Several production changes lacked documented approval and testing evidence."
+    },
+    {
+      "id": "F-2024-09",
+      "control_id": "CC8.1",
+      "control_name": "Change Management",
+      "severity": "high",
+      "raised_date": "2024-04-18",
+      "audit_cycle": 2024,
+      "auditor_note": "Change management process was bypassed for emergency fixes without retrospective approval."
+    }
+  ],
+  "remediations": [
+    {
+      "id": "REM-050",
+      "finding_id": "F-2023-01",
+      "owner": "Rahul Iyer",
+      "opened_date": "2023-04-15",
+      "marked_done_date": "2023-05-10",
+      "evidence_ref": "EV-102",
+      "status": "verified"
+    },
+    {
+      "id": "REM-118",
+      "finding_id": "F-2024-03",
+      "owner": "Priya Nair",
+      "opened_date": "2024-03-20",
+      "marked_done_date": "2024-06-01",
+      "evidence_ref": "EV-311",
+      "status": "done"
+    },
+    {
+      "id": "REM-290",
+      "finding_id": "F-2025-11",
+      "owner": "Priya Nair",
+      "opened_date": "2026-01-01",
+      "marked_done_date": null,
+      "evidence_ref": null,
+      "status": "open"
+    },
+    {
+      "id": "REM-245",
+      "finding_id": "F-2025-05",
+      "owner": "Neha Sharma",
+      "opened_date": "2025-05-20",
+      "marked_done_date": "2025-06-15",
+      "evidence_ref": null,
+      "status": "done"
+    },
+    {
+      "id": "REM-085",
+      "finding_id": "F-2023-08",
+      "owner": "Amit Patel",
+      "opened_date": "2023-10-10",
+      "marked_done_date": "2023-11-20",
+      "evidence_ref": "EV-180",
+      "status": "verified"
+    },
+    {
+      "id": "REM-125",
+      "finding_id": "F-2024-09",
+      "owner": "Amit Patel",
+      "opened_date": "2024-04-20",
+      "marked_done_date": "2024-05-15",
+      "evidence_ref": "EV-405",
+      "status": "verified"
+    }
+  ],
+  "controls": [
+    {
+      "id": "CC6.1",
+      "name": "Logical Access Provisioning",
+      "description": "Logical access to the system is provisioned based on role and least privilege principles."
+    },
+    {
+      "id": "CC6.2",
+      "name": "User Access Reviews",
+      "description": "User access rights are reviewed periodically to ensure appropriate access is maintained."
+    },
+    {
+      "id": "CC7.1",
+      "name": "Vulnerability Management",
+      "description": "Vulnerabilities are identified, prioritized, and remediated in a timely manner."
+    },
+    {
+      "id": "CC7.2",
+      "name": "Anomaly Monitoring",
+      "description": "System anomalies are monitored, logged, and investigated to prevent security incidents."
+    },
+    {
+      "id": "CC8.1",
+      "name": "Change Management",
+      "description": "Changes to systems and applications are authorized, tested, and documented prior to deployment."
+    },
+    {
+      "id": "CC9.2",
+      "name": "Vendor Risk Management",
+      "description": "Risks associated with third-party vendors are assessed and monitored on an ongoing basis."
+    },
+    {
+      "id": "A1.3",
+      "name": "Backup Restore Test",
+      "description": "Backup recovery tests are performed periodically to verify data can be restored."
+    },
+    {
+      "id": "CC5.1",
+      "name": "Logical Access Security",
+      "description": "Security measures are implemented to protect logical access to the system."
+    },
+    {
+      "id": "CC5.2",
+      "name": "End User Device Security",
+      "description": "End-user devices are secured using MDM, disk encryption, and endpoint protection."
+    },
+    {
+      "id": "CC6.3",
+      "name": "Physical Access",
+      "description": "Physical access to sensitive facilities is restricted and monitored."
+    },
+    {
+      "id": "CC6.4",
+      "name": "System Access Revocation",
+      "description": "Access to systems is revoked in a timely manner when an employee departs."
+    },
+    {
+      "id": "A1.2",
+      "name": "Environmental Protections",
+      "description": "Data centers have environmental controls like temperature, fire suppression, and power backups."
+    }
+  ],
+  "control_tests": [
+    {
+      "control_id": "A1.3",
+      "last_tested": "2025-07-28",
+      "tester": "Rahul Iyer",
+      "result": "passed",
+      "required_frequency_days": 365
+    },
+    {
+      "control_id": "CC8.1",
+      "last_tested": "2025-08-15",
+      "tester": "Arjun Mehta",
+      "result": "passed",
+      "required_frequency_days": 365
+    }
+  ],
+  "policy_changes": [
+    {
+      "date": "2024-09-01",
+      "description": "Access Review Policy v3 was enacted, increasing required frequency of user access reviews to monthly."
+    }
+  ],
+  "staff": [
+    {
+      "name": "Arjun Mehta",
+      "active": true,
+      "departed_date": null
+    },
+    {
+      "name": "Priya Nair",
+      "active": false,
+      "departed_date": "2026-01-15"
+    },
+    {
+      "name": "Rahul Iyer",
+      "active": true,
+      "departed_date": null
+    },
+    {
+      "name": "Neha Sharma",
+      "active": true,
+      "departed_date": null
+    },
+    {
+      "name": "Amit Patel",
+      "active": true,
+      "departed_date": null
+    },
+    {
+      "name": "Kavita Singh",
+      "active": true,
+      "departed_date": null
+    },
+    {
+      "name": "Vikram Desai",
+      "active": true,
+      "departed_date": null
+    },
+    {
+      "name": "Sneha Reddy",
+      "active": true,
+      "departed_date": null
+    },
+    {
+      "name": "Rajiv Kapoor",
+      "active": true,
+      "departed_date": null
+    },
+    {
+      "name": "Anjali Joshi",
+      "active": true,
+      "departed_date": null
+    },
+    {
+      "name": "Sanjay Gupta",
+      "active": true,
+      "departed_date": null
+    },
+    {
+      "name": "Aditi Verma",
+      "active": true,
+      "departed_date": null
+    },
+    {
+      "name": "Michael Chen",
+      "active": false,
+      "departed_date": "2024-02-15"
+    },
+    {
+      "name": "Sarah Jenkins",
+      "active": false,
+      "departed_date": "2024-02-15"
+    },
+    {
+      "name": "David Smith",
+      "active": false,
+      "departed_date": "2024-02-15"
+    }
+  ],
+  "org_events": [
+    {
+      "date": "2024-02-10",
+      "description": "The platform team was reorganized and three admins (Michael Chen, Sarah Jenkins, David Smith) left."
+    },
+    {
+      "date": "2026-01-15",
+      "description": "Priya Nair left FinPay."
+    }
+  ]
+}
