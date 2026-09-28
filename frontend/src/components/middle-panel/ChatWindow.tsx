@@ -2,64 +2,82 @@ import { useEffect, useRef, useState } from "react";
 import { Icon } from "../Icon";
 import { relatedCases, sourcedClaim } from "../../lib/evidence";
 import type { Message, Reference } from "../../types/audit";
-import React from 'react';
+import React from "react";
 
-function formatTextWithCitations(text: string, references?: Reference[], onReference?: (r: Reference) => void) {
+function formatTextWithCitations(
+  text: string,
+  references?: Reference[],
+  onReference?: (r: Reference) => void,
+) {
   if (!text) return text;
-  
-  let allPatterns = ["[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"];
+
+  let allPatterns = [
+    "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}",
+  ];
   if (references && references.length > 0) {
-    const knownIds = references.map(r => r.id);
-    const knownPrefixes = references.map(r => r.id.substring(0, 8));
+    const knownIds = references.map((r) => r.id);
+    const knownPrefixes = references.map((r) => r.id.substring(0, 8));
     allPatterns = [...knownIds, ...knownPrefixes, ...allPatterns];
   }
-  
+
   const patternStr = allPatterns.join("|");
   // Matches optional prefix (source, [, or 【 followed by ID/Prefix followed by optional suffix
-  const regex = new RegExp(`(?:\\(?source\\s*|\\[|【)?(${patternStr})(?:\\]|】|\\))?`, "gi");
+  const regex = new RegExp(
+    `(?:\\(?source\\s*|\\[|【)?(${patternStr})(?:\\]|】|\\))?`,
+    "gi",
+  );
   const parts = text.split(regex);
-  
+
   if (parts.length <= 1) return text; // No matches
-  
+
   const result: React.ReactNode[] = [];
   for (let i = 0; i < parts.length; i++) {
     if (i % 2 === 0) {
       result.push(parts[i]);
     } else {
       const match = parts[i];
-      const refIndex = references ? references.findIndex(r => r.id.toLowerCase() === match.toLowerCase() || r.id.toLowerCase().startsWith(match.toLowerCase())) : -1;
-      const displayNum = refIndex !== -1 ? refIndex + 1 : '*';
-      const refObj = refIndex !== -1 && references ? references[refIndex] : undefined;
-      
+      const refIndex = references
+        ? references.findIndex(
+            (r) =>
+              r.id.toLowerCase() === match.toLowerCase() ||
+              r.id.toLowerCase().startsWith(match.toLowerCase()),
+          )
+        : -1;
+      const displayNum = refIndex !== -1 ? refIndex + 1 : "*";
+      const refObj =
+        refIndex !== -1 && references ? references[refIndex] : undefined;
+
       result.push(
-        <button 
+        <button
           key={match + i}
-          onClick={refObj && onReference ? () => onReference(refObj) : undefined}
+          onClick={
+            refObj && onReference ? () => onReference(refObj) : undefined
+          }
           style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: 'rgba(99, 102, 241, 0.1)',
-            color: '#818cf8',
-            borderRadius: '12px',
-            padding: '0 6px',
-            fontSize: '0.7rem',
-            margin: '0 3px',
-            verticalAlign: 'middle',
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: "rgba(99, 102, 241, 0.1)",
+            color: "#818cf8",
+            borderRadius: "4px",
+            padding: "4px 0px",
+            fontSize: "0.75rem",
+            margin: "0 3px",
+            verticalAlign: "middle",
             fontWeight: 600,
-            cursor: refObj ? 'pointer' : 'default',
-            border: 'none',
-            outline: 'none',
-            lineHeight: '1.2'
+            cursor: refObj ? "pointer" : "default",
+            border: "none",
+            outline: "none",
+            lineHeight: "1.2",
           }}
           title={refObj ? refObj.title : `Source: ${match}`}
         >
-          {displayNum}
-        </button>
+          {`【${displayNum}】`}
+        </button>,
       );
     }
   }
-  
+
   return <>{result}</>;
 }
 
