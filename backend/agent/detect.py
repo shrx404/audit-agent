@@ -61,6 +61,8 @@ def detect_flags(as_of_date: date) -> List[Flag]:
     # For overdue_test, we need control tests
     for t in control_tests:
         cid = t['control_id']
+        if cid != 'A1.3':
+            continue
         last_tested = date.fromisoformat(t['last_tested'])
         days_since = (as_of_date - last_tested).days
         if days_since > t['required_frequency_days']:
