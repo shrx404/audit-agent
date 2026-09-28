@@ -15,6 +15,8 @@ class MemoryError(Exception):
         self.code = code
 
 class HindsightWrapper:
+    _shared_client: Optional[Hindsight] = None
+
     def __init__(self):
         base_url = os.environ.get("HINDSIGHT_BASE_URL")
         api_key = os.environ.get("HINDSIGHT_API_KEY")
@@ -23,7 +25,18 @@ class HindsightWrapper:
         if not base_url or not api_key:
             raise ValueError("Hindsight configuration missing in environment variables.")
         
-        self.client = Hindsight(base_url=base_url, api_key=api_key, timeout=30.0)
+        if HindsightWrapper._shared_client is None:
+            HindsightWrapper._shared_client = Hindsight(base_url=base_url, api_key=api_key, timeout=30.0)
+        self.client = HindsightWrapper._shared_client
+
+    @classmethod
+    def close(cls):
+        if cls._shared_client is not None:
+            try:
+                cls._shared_client.close()
+            except Exception:
+                pass
+            cls._shared_client = None
 
     def _execute_with_retry(self, func, *args, **kwargs):
         attempts = 3

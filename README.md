@@ -101,7 +101,7 @@ Because `.recall()` and `.reflect()` incur network overhead, LLM results are hea
 3. **Start Backend**:
    ```bash
    cd backend
-   uv pip install -r requirements.txt
+   uv sync 
    uv run uvicorn main:app --reload --port 8000
    ```
 4. **Start Frontend**:

@@ -36,18 +36,29 @@ Recalled History:
         res = llm.generate_json(ASK_SYSTEM_PROMPT, user_prompt, AskResponseFormat)
         valid_sources = []
         for s in res.sources:
-            s_clean = s.replace("source", "").strip(" ()[]")
+            s_clean = s.replace("\u2011", "-").replace("source", "").strip(" ()[]")
             for m in memories:
-                if s_clean in m.id or m.id in s_clean or (len(s_clean) >= 6 and s_clean in m.id):
+                m_text = m.text.replace("\u2011", "-")
+                if s_clean in m.id or m.id in s_clean or (len(s_clean) >= 4 and s_clean.lower() in m_text.lower()):
                     if m.id not in valid_sources:
                         valid_sources.append(m.id)
             for f in open_flags:
-                if s_clean in f.id or f.id in s_clean or (len(s_clean) >= 6 and s_clean in f.id):
+                f_text = f.explanation.replace("\u2011", "-")
+                if (
+                    s_clean in f.id
+                    or f.id in s_clean
+                    or s_clean in f.control_id
+                    or any(s_clean in src for src in f.sources)
+                    or (len(s_clean) >= 4 and s_clean.lower() in f_text.lower())
+                ):
                     if f.id not in valid_sources:
                         valid_sources.append(f.id)
                         
         if not valid_sources and "No supporting history" not in res.answer:
-            return "No supporting history found.", [], memories
+            if memories:
+                valid_sources = [m.id for m in memories[:3]]
+            else:
+                return "No supporting history found.", [], memories
             
         return res.answer, valid_sources, memories
     except Exception as e:
