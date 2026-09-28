@@ -255,10 +255,10 @@ Rules:
 - [ ] **T1.3** `backend/scripts/generate_data.py`: background records and prose via LLM, merged with the hand-written ones
 - [ ] **T1.4** `backend/scripts/validate_data.py`: references valid, dates ordered (ticket after finding, done after opened), `audit_cycle == raised_date.year`, ID formats, all traps and the decoy present
 - [ ] **T1.5** Human read-through and fixes
-- [ ] **T1.6** `backend/memory/formatter.py`: record to memory text (Section 4 rules)
-- [ ] **T1.7** `backend/memory/client.py`: thin wrapper with retry on transient errors, 401/402/404 mapped to clear errors, hits normalized to `MemoryHit`, session filter for feedback memories
-- [ ] **T1.8** `backend/memory/seed.py` and `backend/scripts/seed_memory.py`: create bank, retain every record synchronously with `document_id` and timestamp. Idempotent via `document_id` upsert if verified, otherwise delete and recreate the bank. Also retain staff departures.
-- [ ] **T1.9** `backend/scripts/smoke_test.py`. Recall results must contain these record IDs somewhere in the top 10:
+- [x] **T1.6** `backend/memory/formatter.py`: record to memory text (Section 4 rules)
+- [x] **T1.7** `backend/memory/client.py`: thin wrapper with retry on transient errors, 401/402/404 mapped to clear errors, hits normalized to `MemoryHit`, session filter for feedback memories
+- [x] **T1.8** `backend/memory/seed.py` and `backend/scripts/seed_memory.py`: create bank, retain every record synchronously with `document_id` and timestamp. Idempotent via `document_id` upsert if verified, otherwise delete and recreate the bank. Also retain staff departures.
+- [x] **T1.9** `backend/scripts/smoke_test.py`. Recall results must contain these record IDs somewhere in the top 10:
   - "access review findings" returns both CC6.2 findings (2023 and 2024)
   - "backup restore test" returns the A1.3 test
   - "vendor risk ticket" returns the CC9.2 ticket
@@ -269,23 +269,24 @@ Rules:
 
 ### Phase 2: Agent Brain
 
-- [ ] **T2.1** `backend/agent/llm.py`: Groq client, JSON output validated with Pydantic, **no tool calling**. Exponential backoff (3 attempts) on 429/5xx, 30s timeout. On JSON parse failure: strip code fences, re-ask once with "return valid JSON only", then the fallback model, then return a clear error object (never crash).
-- [ ] **T2.2** `backend/agent/detect.py` (Section 5.2) plus unit tests: each trap, the decoy, edge cases, and an integration test that `detect()` over the real seed data returns **exactly** the four trap flag IDs and nothing else
-- [ ] **T2.3** `backend/agent/readiness.py` (Section 5.3) plus tests
-- [ ] **T2.4** `backend/agent/prompts.py`: force citations ("every claim must cite a source ID; if none, say you do not know")
-- [ ] **T2.5** `backend/agent/predict.py`: per flagged control, recall related history and attach as `Flag.memories`. One reflect call for cross-year patterns. The LLM builds `Prediction` objects from recalled memories plus the reflect text. Drop predictions with no valid source.
-- [ ] **T2.6** `backend/agent/state.py`: feedback state, overlay onto the report, and the reset logic (Section 5.4), plus tests
-- [ ] **T2.7** `backend/agent/ask.py`: memory ON and OFF behavior (Section 7)
-- [ ] **T2.8** `backend/state/cache.json` build and load (Section 5.5)
-- [ ] **T2.9** Edge cases: empty recall says "no history found" and never invents; Hindsight unreachable returns a clear error and the cached report if present; malformed LLM JSON follows T2.1; unknown control ID in a question gets a polite answer
-- [ ] **T2.10** `backend/scripts/phase2_check.py` (the exit check below, automated)
+- [x] **T2.1** `backend/agent/llm.py`: Groq client, JSON output validated with Pydantic, **no tool calling**. Exponential backoff (3 attempts) on 429/5xx, 30s timeout. On JSON parse failure: strip code fences, re-ask once with "return valid JSON only", then the fallback model, then return a clear error object (never crash).
+- [x] **T2.2** `backend/agent/detect.py` (Section 5.2) plus unit tests: each trap, the decoy, edge cases, and an integration test that `detect()` over the real seed data returns **exactly** the four trap flag IDs and nothing else
+- [x] **T2.3** `backend/agent/readiness.py` (Section 5.3) plus tests
+- [x] **T2.4** `backend/agent/prompts.py`: force citations ("every claim must cite a source ID; if none, say you do not know"). *(Note: Updated PREDICT_SYSTEM_PROMPT with explicit JSON keys to resolve Pydantic validation errors).*
+- [x] **T2.5** `backend/agent/predict.py`: per flagged control, recall related history and attach as `Flag.memories`. One reflect call for cross-year patterns. The LLM builds `Prediction` objects from recalled memories plus the reflect text. Drop predictions with no valid source.
+- [x] **T2.6** `backend/agent/state.py`: feedback state, overlay onto the report, and the reset logic (Section 5.4), plus tests
+- [x] **T2.7** `backend/agent/ask.py`: memory ON and OFF behavior (Section 7)
+- [x] **T2.8** `backend/state/cache.json` build and load (Section 5.5). *(Note: Added utf-8 encoding to cache.py to fix UnicodeEncodeError).*
+- [x] **T2.9** Edge cases: empty recall says "no history found" and never invents; Hindsight unreachable returns a clear error and the cached report if present; malformed LLM JSON follows T2.1; unknown control ID in a question gets a polite answer
+- [x] **T2.10** `backend/scripts/phase2_check.py` (the exit check below, automated)
+  - *(Note: Fixed imports across all agent scripts to drop 'backend.' prefix, ensuring correct resolution when run from the backend directory)*
 
 **Exit:** with memory ON the report has exactly the four expected open flags, each with valid sources and recalled memories, and no decoy flag. With memory OFF, `/ask` returns generic advice with empty sources. After `resolved` on `repeat_finding:CC6.2` with an evidence ID, the score rises, the explanation cites the evidence and date, and the CC6.2 prediction drops. `false_alarm` removes a penalty. Reset restores the original score.
 
 ### Phase 3: API Layer
 
-- [ ] **T3.1** FastAPI app, CORS, config loader (`AS_OF_DATE` and models from env), global exception handler returning `{error, code}`
-- [ ] **T3.2** Implement all Section 7 endpoints (plain `def` routes if the client is sync)
+- [x] **T3.1** FastAPI app, CORS, config loader (`AS_OF_DATE` and models from env), global exception handler returning `{error, code}`
+- [x] **T3.2** Implement all Section 7 endpoints (plain `def` routes if the client is sync)
 - [ ] **T3.3** Integration tests hitting every route, including error paths
 
 **Exit:** every route works via curl with the right JSON shapes. `/demo/reset` returns instantly. `/openapi.json` generates the frontend types.
