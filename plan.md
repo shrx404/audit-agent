@@ -308,10 +308,10 @@ Rules:
 
 ### Phase 5: Submission Essentials
 
-- [ ] **T5.1** README with a specific "How Hindsight memory is used" section (Section 4 text, the memory table, recall queries, reflect use, feedback retention, memory ON vs OFF screenshots), setup, seed, run, reset, tests, limitations, data sources (real SOC 2 IDs, synthetic history)
-- [ ] **T5.2** Run the demo 3 times with `/demo/reset` before each. Cut anything that drags.
-- [ ] **T5.3** Confirm `backend/state/cache.json` fallback works with the network off
-- [ ] **T5.4** Check no secrets in git history (rotate keys if any were committed), clean repo, tag `v1.0-mvp`
+- [x] **T5.1** README with a specific "How Hindsight memory is used" section (Section 4 text, the memory table, recall queries, reflect use, feedback retention, memory ON vs OFF screenshots), setup, seed, run, reset, tests, limitations, data sources (real SOC 2 IDs, synthetic history)
+- [x] **T5.2** Run the demo 3 times with `/demo/reset` before each. Cut anything that drags.
+- [x] **T5.3** Confirm `backend/state/cache.json` fallback works with the network off
+- [x] **T5.4** Check no secrets in git history (rotate keys if any were committed), clean repo, tag `v1.0-mvp`
 
 **Human-only deliverables (not agent work, do not forget):** demo video, backup demo video, and per team member an Article, a Social post, and a Video from the official content guide.
 
