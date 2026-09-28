@@ -198,7 +198,7 @@ export function ChatWindow({
                 </>
               )}
               {/* Handle new /api/ask response format */}
-              {(m.sources?.length || m.memories?.length) ? (
+              {m.sources && m.sources.length > 0 ? (
                 <div className="analysis-details" style={{ marginTop: '1rem' }}>
                   {m.sources && m.sources.length > 0 && (
                     <div>
@@ -208,23 +208,6 @@ export function ChatWindow({
                           <li key={i}>{s}</li>
                         ))}
                       </ul>
-                    </div>
-                  )}
-                  
-                  {m.memories && m.memories.length > 0 && (
-                    <div style={{ marginTop: '1rem' }}>
-                      <strong>Recalled Context</strong>
-                      <div style={{ marginTop: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                        {m.memories.map((mem, i) => (
-                          <div key={i} style={{ padding: '0.5rem', backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: '4px', fontSize: '0.85rem' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
-                              <strong>{mem.type}</strong>
-                              {mem.date && <span style={{ opacity: 0.7 }}>{mem.date}</span>}
-                            </div>
-                            <p>{mem.text}</p>
-                          </div>
-                        ))}
-                      </div>
                     </div>
                   )}
                 </div>

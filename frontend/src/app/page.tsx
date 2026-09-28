@@ -312,6 +312,7 @@ export default function Home() {
         <MemoryPanel
           references={active?.references || []}
           analysis={active?.analysis}
+          memories={active?.memories}
           readiness={readiness}
           allowHistory={memory && !!active?.memoryEnabled}
           onReference={showReference}
