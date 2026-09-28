@@ -18,7 +18,6 @@ import type {
   Reference,
   SourceCategory,
   SourceRecord,
-  ReadinessReport,
 } from "../types/audit";
 
 type Modal =
@@ -30,12 +29,46 @@ type Modal =
   | "reference"
   | "case"
   | null;
+
+function Resizer({
+  isLeft,
+  width,
+  setWidth,
+}: {
+  isLeft: boolean;
+  width: number;
+  setWidth: (w: number) => void;
+}) {
+  return (
+    <div
+      className="panel-resizer"
+      onMouseDown={(e) => {
+        e.preventDefault();
+        const startX = e.clientX;
+        const startWidth = width;
+        const onMouseMove = (moveEvent: MouseEvent) => {
+          const delta = moveEvent.clientX - startX;
+          const newWidth = isLeft ? startWidth + delta : startWidth - delta;
+          setWidth(Math.max(180, Math.min(newWidth, 600)));
+        };
+        const onMouseUp = () => {
+          window.removeEventListener("mousemove", onMouseMove);
+          window.removeEventListener("mouseup", onMouseUp);
+          document.body.style.cursor = "";
+        };
+        window.addEventListener("mousemove", onMouseMove);
+        window.addEventListener("mouseup", onMouseUp);
+        document.body.style.cursor = "col-resize";
+      }}
+    />
+  );
+}
+
 export default function Home() {
   const [sources, setSources] = useState(seedSources);
   const [memory, setMemory] = useState(true);
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
-  const [readiness, setReadiness] = useState<ReadinessReport | null>(null);
   const [activeId, setActiveId] = useState("");
   const [selected, setSelected] = useState<SourceRecord | null>(null);
   const [modal, setModal] = useState<Modal>(null);
@@ -43,6 +76,8 @@ export default function Home() {
   const [pendingQuestion, setPendingQuestion] = useState("");
   const [control, setControl] = useState("");
   const [department, setDepartment] = useState("");
+  const [leftWidth, setLeftWidth] = useState(250);
+  const [rightWidth, setRightWidth] = useState(250);
   const [uploadCategory, setUploadCategory] =
     useState<SourceCategory>("Findings");
   const [uploadError, setUploadError] = useState("");
@@ -61,19 +96,6 @@ export default function Home() {
     if (modal) dialog.current?.showModal();
     else dialog.current?.close();
   }, [modal]);
-  useEffect(() => {
-    const fetchReadiness = async () => {
-      try {
-        const res = await fetch("/api/readiness");
-        if (res.ok) {
-          setReadiness(await res.json());
-        }
-      } catch (e) {
-        console.error(e);
-      }
-    };
-    fetchReadiness();
-  }, []);
   const busy = confirmationBusy || uploading;
   function closeModal() {
     if (!busy) setModal(null);
@@ -283,7 +305,10 @@ export default function Home() {
           </button>
         ))}
       </nav>
-      <main className={`workspace show-${mobileTab}`}>
+      <main 
+        className={`workspace show-${mobileTab}`}
+        style={{ gridTemplateColumns: `minmax(0, ${leftWidth}px) 4px 1fr 4px minmax(0, ${rightWidth}px)` }}
+      >
         <SourceDataCorpus
           sources={sources}
           selected={selected?.id || ""}
@@ -293,6 +318,7 @@ export default function Home() {
             setModal("upload");
           }}
         />
+        <Resizer isLeft={true} width={leftWidth} setWidth={setLeftWidth} />
         <section className="chat-panel" aria-label="Audit Memory chat">
           <Header onSettings={() => setModal("settings")} />
           <ChatWindow
@@ -309,11 +335,11 @@ export default function Home() {
             onSelectAnswer={(m) => setActiveId(m.id)}
           />
         </section>
+        <Resizer isLeft={false} width={rightWidth} setWidth={setRightWidth} />
         <MemoryPanel
           references={active?.references || []}
           analysis={active?.analysis}
           memories={active?.memories}
-          readiness={readiness}
           allowHistory={memory && !!active?.memoryEnabled}
           onReference={showReference}
           onCase={(id) => {
