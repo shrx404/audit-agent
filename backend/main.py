@@ -1,5 +1,13 @@
 import os
+import sys
+from contextlib import asynccontextmanager
 from dotenv import load_dotenv
+
+# Reconfigure stdout/stderr for UTF-8 on Windows
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8")
 
 # Load env variables before importing agent components
 load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))
@@ -18,7 +26,12 @@ from memory.client import HindsightWrapper
 from agent.llm import AgentLLM
 from schemas import MemoryHit
 
-app = FastAPI(title="AuditMemory API")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    yield
+    HindsightWrapper.close()
+
+app = FastAPI(title="AuditMemory API", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,

@@ -100,11 +100,19 @@ export default function NewVersionPage() {
         body: JSON.stringify({ question: userMsg.text, use_memory: useMemory }),
       });
       
-      const data = await res.json();
-      
       if (!res.ok) {
-        throw new Error(data.error || "An error occurred");
+        let errorMsg = "An error occurred";
+        try {
+          const errData = await res.json();
+          errorMsg = errData.error || errData.detail || errorMsg;
+        } catch {
+          const text = await res.text();
+          errorMsg = text || `Backend connection error (${res.status})`;
+        }
+        throw new Error(errorMsg);
       }
+      
+      const data = await res.json();
       
       const astMsg: ChatMessage = {
         id: crypto.randomUUID(),
