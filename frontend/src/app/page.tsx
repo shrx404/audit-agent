@@ -19,6 +19,7 @@ import type {
   Reference,
   SourceCategory,
   SourceRecord,
+  MemoryHit,
 } from "../types/audit";
 
 type Modal =
@@ -205,7 +206,7 @@ export default function Home() {
           }
           
           if (data.memories && Array.isArray(data.memories)) {
-            const memObj = data.memories.find((m: any) => m.id === sourceId);
+            const memObj = data.memories.find((m: MemoryHit) => m.id === sourceId);
             if (memObj) {
               newReferences.push({
                 id: memObj.id,
@@ -614,14 +615,14 @@ export default function Home() {
                 <strong>
                   {uploading ? "Adding sources…" : "Choose source files"}
                 </strong>
-                <span>Any file type · up to 10 MB</span>
+                <span>TXT, MD, DOC, DOCX, PDF, JSON · up to 10 MB</span>
               </button>
               <input
                 ref={fileInput}
                 type="file"
                 hidden
                 multiple
-                accept="*/*"
+                accept=".txt,.md,.doc,.docx,.pdf,.json"
                 onChange={(e) => void addFiles(e.target.files)}
               />
               {uploading && (
