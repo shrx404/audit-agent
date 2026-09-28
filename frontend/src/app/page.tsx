@@ -156,7 +156,10 @@ export default function Home() {
       const id = crypto.randomUUID();
 
       let mockAnalysis: Analysis | undefined = undefined;
-      if (question.toLowerCase().includes("compare") || question.toLowerCase().includes("previous")) {
+      if (
+        question.toLowerCase().includes("compare") ||
+        question.toLowerCase().includes("previous")
+      ) {
         mockAnalysis = {
           analysis_id: "mock-1",
           status: "suspected",
@@ -166,11 +169,21 @@ export default function Home() {
           previous_remediation: null,
           explanation: "Mock analysis.",
           memories_used: [
-            { mem_id: "m1", text: "Finding F-2023-01: Inadequate access revocation.", type: "audit finding", trust: "high", as_of: "2023", subject: "F-2023-01", is_current: false, superseded_by: null, relevance: null }
+            {
+              mem_id: "m1",
+              text: "Finding F-2023-01: Inadequate access revocation.",
+              type: "audit finding",
+              trust: "high",
+              as_of: "2023",
+              subject: "F-2023-01",
+              is_current: false,
+              superseded_by: null,
+              relevance: null,
+            },
           ],
           related_past_findings: [
-            { 
-              finding_id: "F-2023-01", 
+            {
+              finding_id: "F-2023-01",
               control_id: "AC-01",
               department: "IT",
               raised_date: "2023-01-01",
@@ -179,12 +192,15 @@ export default function Home() {
               memory_ids: ["m1"],
               is_recurrence_candidate: true,
               comparison: {
-                "F-2024-03": { rating: "match", reason: "Both involve delayed access revocation." }
-              }
-            }
+                "F-2024-03": {
+                  rating: "match",
+                  reason: "Both involve delayed access revocation.",
+                },
+              },
+            },
           ],
           deterministic_checks: [],
-          warnings: []
+          warnings: [],
         };
       }
 
@@ -204,9 +220,11 @@ export default function Home() {
             });
             continue;
           }
-          
+
           if (data.memories && Array.isArray(data.memories)) {
-            const memObj = data.memories.find((m: MemoryHit) => m.id === sourceId);
+            const memObj = data.memories.find(
+              (m: MemoryHit) => m.id === sourceId,
+            );
             if (memObj) {
               newReferences.push({
                 id: memObj.id,
@@ -376,9 +394,11 @@ export default function Home() {
           </button>
         ))}
       </nav>
-      <main 
+      <main
         className={`workspace show-${mobileTab}`}
-        style={{ gridTemplateColumns: `minmax(0, ${leftWidth}px) 4px 1fr 4px minmax(0, ${rightWidth}px)` }}
+        style={{
+          gridTemplateColumns: `minmax(0, ${leftWidth}px) 4px 1fr 4px minmax(0, ${rightWidth}px)`,
+        }}
       >
         <SourceDataCorpus
           sources={sources}
@@ -633,7 +653,12 @@ export default function Home() {
               {!uploading && !!uploadIds.length && (
                 <p
                   className="inline-notice"
-                  style={{ color: "#4caf50" }}
+                  style={{
+                    color: "#4caf50",
+                    fontSize: "14px",
+                    fontWeight: "600",
+                    padding: "10px 0",
+                  }}
                 >
                   {uploadIds.length > 1
                     ? "These files have been uploaded successfully."
