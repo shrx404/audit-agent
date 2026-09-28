@@ -254,21 +254,6 @@ export function ChatWindow({
                   )}
                 </>
               )}
-              {/* Handle new /api/ask response format */}
-              {m.sources && m.sources.length > 0 ? (
-                <div className="analysis-details" style={{ marginTop: '1rem' }}>
-                  {m.sources && m.sources.length > 0 && (
-                    <div>
-                      <strong>Sources Cited</strong>
-                      <ul style={{ listStyleType: 'disc', paddingLeft: '1.5rem', marginTop: '0.5rem' }}>
-                        {m.sources.map((s, i) => (
-                          <li key={i}>{s}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-              ) : null}
             </div>
           </article>
         ))}

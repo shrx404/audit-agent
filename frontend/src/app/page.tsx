@@ -198,22 +198,22 @@ export default function Home() {
               snippet: sourceObj.content ? sourceObj.content.slice(0, 300) : "",
               historical: false,
             });
+            continue;
           }
-        }
-      }
-      
-      if (data.memories && Array.isArray(data.memories)) {
-        for (const mem of data.memories) {
-          if (!newReferences.find((r) => r.id === mem.id)) {
-            newReferences.push({
-              id: mem.id,
-              sourceId: mem.id,
-              title: mem.type || "Historical Context",
-              category: "Memory",
-              location: mem.date || "",
-              snippet: mem.text,
-              historical: true,
-            });
+          
+          if (data.memories && Array.isArray(data.memories)) {
+            const memObj = data.memories.find((m: any) => m.id === sourceId);
+            if (memObj) {
+              newReferences.push({
+                id: memObj.id,
+                sourceId: memObj.id,
+                title: memObj.type || "Historical Context",
+                category: "Memory",
+                location: memObj.date || "",
+                snippet: memObj.text,
+                historical: true,
+              });
+            }
           }
         }
       }
