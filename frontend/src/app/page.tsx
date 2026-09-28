@@ -615,14 +615,14 @@ export default function Home() {
                 <strong>
                   {uploading ? "Adding sources…" : "Choose source files"}
                 </strong>
-                <span>Any file type · up to 10 MB</span>
+                <span>TXT, MD, DOC, DOCX, PDF, JSON · up to 10 MB</span>
               </button>
               <input
                 ref={fileInput}
                 type="file"
                 hidden
                 multiple
-                accept="*/*"
+                accept=".txt,.md,.doc,.docx,.pdf,.json"
                 onChange={(e) => void addFiles(e.target.files)}
               />
               {uploading && (
