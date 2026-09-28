@@ -10,5 +10,6 @@ dependencies = [
     "hindsight-client>=0.10.1",
     "pydantic>=2.13.5",
     "python-dotenv>=1.2.3",
+    "python-multipart>=0.0.32",
     "uvicorn>=0.54.0",
 ]

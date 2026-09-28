@@ -12,8 +12,11 @@ if hasattr(sys.stderr, "reconfigure"):
 # Load env variables before importing agent components
 load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, UploadFile, File
 from fastapi.responses import JSONResponse
+import json
+import uuid
+from datetime import datetime
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional, List
@@ -69,6 +72,63 @@ def health_check():
 @app.get("/readiness")
 def readiness():
     return get_readiness_report()
+
+def get_uploaded_sources_path():
+    return os.path.join(os.path.dirname(__file__), "data", "uploaded_sources.json")
+
+@app.get("/sources")
+def get_sources():
+    path = get_uploaded_sources_path()
+    if os.path.exists(path):
+        with open(path, "r", encoding="utf-8") as f:
+            try:
+                return json.load(f)
+            except:
+                return []
+    return []
+
+@app.post("/upload")
+async def upload_file(file: UploadFile = File(...)):
+    hindsight = HindsightWrapper()
+    content_bytes = await file.read()
+    content_str = content_bytes.decode('utf-8', errors='ignore')
+    
+    doc_id = f"local:{uuid.uuid4()}"
+    hindsight.retain(
+        content=content_str,
+        context=f"Uploaded document: {file.filename}",
+        timestamp=datetime.now(),
+        document_id=doc_id,
+        retain_async=False
+    )
+    
+    path = get_uploaded_sources_path()
+    uploaded = []
+    if os.path.exists(path):
+        with open(path, "r", encoding="utf-8") as f:
+            try:
+                uploaded = json.load(f)
+            except:
+                pass
+                
+    new_source = {
+        "id": doc_id,
+        "title": file.filename,
+        "category": "Documents",
+        "kind": "Documents",
+        "tone": "muted",
+        "description": content_str[:200] + "..." if len(content_str) > 200 else content_str,
+        "date": datetime.now().strftime("%Y-%m-%d"),
+        "details": {"size": len(content_bytes)},
+        "content": content_str,
+        "origin": "indexed",
+        "status": "indexed"
+    }
+    uploaded.append(new_source)
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(uploaded, f)
+        
+    return {"indexed": True, "source_id": doc_id}
 
 class AskRequest(BaseModel):
     question: str

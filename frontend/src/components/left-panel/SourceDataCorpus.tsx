@@ -13,11 +13,13 @@ export function SourceDataCorpus({
   selected,
   onSelect,
   onAdd,
+  onDropFiles,
 }: {
   sources: SourceRecord[];
   selected: string;
   onSelect: (s: SourceRecord) => void;
   onAdd: () => void;
+  onDropFiles?: (files: FileList | File[]) => void;
 }) {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("All");
@@ -30,7 +32,34 @@ export function SourceDataCorpus({
         .includes(query.toLowerCase()),
   );
   return (
-    <aside className="sources-panel" aria-label="Source explorer">
+    <aside
+      className="sources-panel"
+      aria-label="Source explorer"
+      onDragOver={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      }}
+      onDrop={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const items = e.dataTransfer.items;
+        if (items) {
+          const files: File[] = [];
+          for (let i = 0; i < items.length; i++) {
+            if (items[i].kind === 'file') {
+              const file = items[i].getAsFile();
+              if (file) files.push(file);
+            }
+          }
+          if (files.length > 0) {
+            onDropFiles?.(files);
+          }
+        } else if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+          onDropFiles?.(e.dataTransfer.files);
+        }
+      }}
+    >
       <div className="explorer-controls">
         <button className="add-sources" onClick={onAdd}>
           <Icon name="plus" size={17} />

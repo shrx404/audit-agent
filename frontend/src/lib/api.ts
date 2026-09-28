@@ -5,6 +5,7 @@ import type {
   FindingRequest,
   MemoryHit,
   ReadinessReport,
+  SourceRecord,
 } from "../types/audit";
 
 type JsonObject = Record<string, unknown>;
@@ -242,6 +243,14 @@ export class AuditApi {
   async getReadiness(): Promise<ReadinessReport> {
     const result = await this.request("/readiness");
     return result as ReadinessReport;
+  }
+  async getSources(): Promise<SourceRecord[]> {
+    try {
+      const result = await this.request("/sources");
+      return Array.isArray(result) ? result : [];
+    } catch {
+      return [];
+    }
   }
 }
 export const auditApi = new AuditApi(

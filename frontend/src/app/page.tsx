@@ -95,6 +95,17 @@ export default function Home() {
   const localFiles = useRef(new Map<string, File>());
   const active = messages.find((m) => m.id === activeId);
   useEffect(() => {
+    auditApi.getSources().then((uploadedSources) => {
+      if (uploadedSources.length > 0) {
+        setSources((prev) => {
+          const newIds = new Set(uploadedSources.map(s => s.id));
+          const filtered = prev.filter(p => !newIds.has(p.id));
+          return [...filtered, ...uploadedSources];
+        });
+      }
+    }).catch(console.error);
+  }, []);
+  useEffect(() => {
     if (modal) dialog.current?.showModal();
     else dialog.current?.close();
   }, [modal]);
@@ -332,7 +343,7 @@ export default function Home() {
       );
     }
   }
-  async function addFiles(files: FileList | null) {
+  async function addFiles(files: FileList | File[] | null) {
     if (!files?.length || uploading) return;
     setUploadError("");
     setUploading(true);
@@ -415,6 +426,11 @@ export default function Home() {
           onAdd={() => {
             setUploadError("");
             setModal("upload");
+          }}
+          onDropFiles={(files) => {
+            setUploadError("");
+            setModal("upload");
+            addFiles(files);
           }}
         />
         <Resizer isLeft={true} width={leftWidth} setWidth={setLeftWidth} />
