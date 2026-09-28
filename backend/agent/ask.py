@@ -34,8 +34,19 @@ Recalled History:
 """
     try:
         res = llm.generate_json(ASK_SYSTEM_PROMPT, user_prompt, AskResponseFormat)
-        valid_sources = [s for s in res.sources if s in memory_texts or any(s in f.id for f in open_flags)]
-        if not valid_sources:
+        valid_sources = []
+        for s in res.sources:
+            s_clean = s.replace("source", "").strip(" ()[]")
+            for m in memories:
+                if s_clean in m.id or m.id in s_clean or (len(s_clean) >= 6 and s_clean in m.id):
+                    if m.id not in valid_sources:
+                        valid_sources.append(m.id)
+            for f in open_flags:
+                if s_clean in f.id or f.id in s_clean or (len(s_clean) >= 6 and s_clean in f.id):
+                    if f.id not in valid_sources:
+                        valid_sources.append(f.id)
+                        
+        if not valid_sources and "No supporting history" not in res.answer:
             return "No supporting history found.", [], memories
             
         return res.answer, valid_sources, memories
