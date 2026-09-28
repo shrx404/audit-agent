@@ -19,6 +19,7 @@ import type {
   Reference,
   SourceCategory,
   SourceRecord,
+  MemoryHit,
 } from "../types/audit";
 
 type Modal =
@@ -205,7 +206,7 @@ export default function Home() {
           }
           
           if (data.memories && Array.isArray(data.memories)) {
-            const memObj = data.memories.find((m: any) => m.id === sourceId);
+            const memObj = data.memories.find((m: MemoryHit) => m.id === sourceId);
             if (memObj) {
               newReferences.push({
                 id: memObj.id,
