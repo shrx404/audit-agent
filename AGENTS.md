@@ -8,3 +8,4 @@
 - Write tests for detection, scoring, and feedback logic.
 - Stay inside the MVP scope. Do not add backlog items.
 - Always use `uv` as the Python package manager.
+- Only make changes in the `frontend` and `backend` folders.
