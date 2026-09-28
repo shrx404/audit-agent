@@ -13,6 +13,7 @@ import {
   fileExtension,
 } from "../lib/sources";
 import type {
+  Analysis,
   ConfirmationRequest,
   Message,
   Reference,
@@ -149,6 +150,40 @@ export default function Home() {
       }
       
       const id = crypto.randomUUID();
+
+      let mockAnalysis: Analysis | undefined = undefined;
+      if (question.toLowerCase().includes("compare") || question.toLowerCase().includes("previous")) {
+        mockAnalysis = {
+          analysis_id: "mock-1",
+          status: "suspected",
+          possible_recurrence: true,
+          recurrence_confidence: "high",
+          previous_root_cause: null,
+          previous_remediation: null,
+          explanation: "Mock analysis.",
+          memories_used: [
+            { mem_id: "m1", text: "Finding F-2023-01: Inadequate access revocation.", type: "audit finding", trust: "high", as_of: "2023", subject: "F-2023-01", is_current: false, superseded_by: null, relevance: null }
+          ],
+          related_past_findings: [
+            { 
+              finding_id: "F-2023-01", 
+              control_id: "AC-01",
+              department: "IT",
+              raised_date: "2023-01-01",
+              summary: "Inadequate access revocation for departing employees.",
+              same_control_id: true,
+              memory_ids: ["m1"],
+              is_recurrence_candidate: true,
+              comparison: {
+                "F-2024-03": { rating: "match", reason: "Both involve delayed access revocation." }
+              }
+            }
+          ],
+          deterministic_checks: [],
+          warnings: []
+        };
+      }
+
       setMessages((m) => [
         ...m,
         {
@@ -158,6 +193,7 @@ export default function Home() {
           sources: data.sources,
           memories: data.memories,
           memoryEnabled: useMemory,
+          analysis: mockAnalysis,
         },
       ]);
       setActiveId(id);
