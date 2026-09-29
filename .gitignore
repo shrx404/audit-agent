@@ -6,3 +6,15 @@ __pycache__/
 backend/state/
 .DS_Store
 backend/data/uploaded_sources.json
+
+# Caches and builds
+out/
+build/
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+.uv/
+.pytest_cache/
