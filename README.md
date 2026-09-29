@@ -7,39 +7,31 @@ An AI-powered compliance and audit-assurance assistant designed to help auditors
 ## System Workflow
 
 ```mermaid
-flowchart TD
-
-subgraph group_workspace["Audit workspace"]
-  node_page["Workspace<br/>[page.tsx]"]
-  node_sources_ui["Source explorer"]
-  node_chat_ui["Chat window<br/>[ChatWindow.tsx]"]
-  node_memory_ui["Evidence panel<br/>[MemoryPanel.tsx]"]
-  node_confirm_ui["Confirmation form"]
-  node_api_client["Typed API client<br/>[api.ts]"]
-end
-
-subgraph group_backend["Audit workflows"]
-  node_api_server["FastAPI routes<br/>[main.py]"]
-  node_upload["Evidence ingestion<br/>[main.py]"]
-  node_analysis["Finding analysis"]
-  node_readiness["Readiness checks<br/>[readiness.py]"]
-  node_feedback["Audit feedback<br/>[state.py]"]
-end
-
-subgraph group_agent["Agent services"]
-  node_ask["Question answering<br/>[ask.py]"]
-  node_agent_llm["Structured inference<br/>[llm.py]"]
-  node_memory_client["Memory wrapper<br/>[client.py]"]
-  node_omniroute_client["OmniRoute client<br/>[llm_client.py]"]
-end
-
-subgraph group_integrations["External services"]
-  node_hindsight[("Hindsight memory")]
-  node_groq{{"Groq inference"}}
-  node_omniroute{{"OmniRoute service"}}
-end
+flowchart LR
 
 node_auditor(("Auditor"))
+
+node_page["Workspace<br/>[page.tsx]"]
+node_sources_ui["Source explorer"]
+node_chat_ui["Chat window<br/>[ChatWindow.tsx]"]
+node_memory_ui["Evidence panel<br/>[MemoryPanel.tsx]"]
+node_confirm_ui["Confirmation form"]
+node_api_client["Typed API client<br/>[api.ts]"]
+
+node_api_server["FastAPI routes<br/>[main.py]"]
+node_upload["Evidence ingestion<br/>[main.py]"]
+node_analysis["Finding analysis"]
+node_readiness["Readiness checks<br/>[readiness.py]"]
+node_feedback["Audit feedback<br/>[state.py]"]
+
+node_ask["Question answering<br/>[ask.py]"]
+node_agent_llm["Structured inference<br/>[llm.py]"]
+node_memory_client["Memory wrapper<br/>[client.py]"]
+node_omniroute_client["OmniRoute client<br/>[llm_client.py]"]
+
+node_hindsight[("Hindsight memory")]
+node_groq{{"Groq inference"}}
+node_omniroute{{"OmniRoute service"}}
 
 node_auditor -->|"uses"| node_page
 node_page -->|"renders"| node_sources_ui
@@ -47,15 +39,18 @@ node_page -->|"renders"| node_chat_ui
 node_page -->|"renders"| node_memory_ui
 node_page -->|"renders"| node_confirm_ui
 node_page -->|"requests"| node_api_client
+
 node_api_client -->|"HTTP calls"| node_api_server
 node_api_server -->|"handles uploads"| node_upload
 node_api_server -->|"answers questions"| node_ask
 node_api_server -->|"analyzes findings"| node_analysis
 node_api_server -->|"gets readiness"| node_readiness
 node_api_server -->|"records feedback"| node_feedback
+
 node_upload -->|"retains evidence"| node_memory_client
 node_ask -->|"recalls memories"| node_memory_client
 node_ask -->|"generates answer"| node_agent_llm
+
 node_memory_client -->|"reads and writes"| node_hindsight
 node_agent_llm -->|"calls model"| node_groq
 node_omniroute_client -.->|"routes completions"| node_omniroute
@@ -76,19 +71,6 @@ click node_ask "https://github.com/shrx404/audit-agent/blob/main/backend/agent/a
 click node_agent_llm "https://github.com/shrx404/audit-agent/blob/main/backend/agent/llm.py"
 click node_memory_client "https://github.com/shrx404/audit-agent/blob/main/backend/memory/client.py"
 click node_omniroute_client "https://github.com/shrx404/audit-agent/blob/main/omniroute/services/llm_client.py"
-
-classDef toneNeutral fill:#f8fafc,stroke:#334155,stroke-width:1.5px,color:#0f172a
-classDef toneBlue fill:#dbeafe,stroke:#2563eb,stroke-width:1.5px,color:#172554
-classDef toneAmber fill:#fef3c7,stroke:#d97706,stroke-width:1.5px,color:#78350f
-classDef toneMint fill:#dcfce7,stroke:#16a34a,stroke-width:1.5px,color:#14532d
-classDef toneRose fill:#ffe4e6,stroke:#e11d48,stroke-width:1.5px,color:#881337
-classDef toneIndigo fill:#e0e7ff,stroke:#4f46e5,stroke-width:1.5px,color:#312e81
-classDef toneTeal fill:#ccfbf1,stroke:#0f766e,stroke-width:1.5px,color:#134e4a
-class node_page,node_sources_ui,node_chat_ui,node_memory_ui,node_confirm_ui,node_api_client toneBlue
-class node_api_server,node_upload,node_analysis,node_readiness,node_feedback toneAmber
-class node_ask,node_agent_llm,node_memory_client,node_omniroute_client toneMint
-class node_hindsight,node_groq,node_omniroute toneRose
-class node_auditor toneIndigo
 ```
 
 ---
