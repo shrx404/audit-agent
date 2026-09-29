@@ -118,7 +118,21 @@ async def get_sources():
                     "status": "indexed"
                 })
     except Exception as e:
-        print(f"Failed to fetch online corpus documents: {e}")
+        error_msg = str(e)
+        print(f"Failed to fetch online corpus documents: {error_msg}")
+        uploaded.append({
+            "id": "ERROR-1",
+            "title": "ERROR",
+            "category": "Documents",
+            "kind": "Documents",
+            "tone": "error",
+            "description": f"Failed to fetch: {error_msg}",
+            "date": "",
+            "details": {},
+            "content": "",
+            "origin": "indexed",
+            "status": "failed"
+        })
 
     return uploaded
 
