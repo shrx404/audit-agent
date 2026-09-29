@@ -9,68 +9,22 @@ An AI-powered compliance and audit-assurance assistant designed to help auditors
 ```mermaid
 flowchart LR
 
-node_auditor(("Auditor"))
+Auditor([Auditor])
+AuditUI[Audit Workspace UI]
+AuditServer[Audit API Server]
+AgentCore[Agent Analysis Core]
 
-node_page["Workspace<br/>[page.tsx]"]
-node_sources_ui["Source explorer"]
-node_chat_ui["Chat window<br/>[ChatWindow.tsx]"]
-node_memory_ui["Evidence panel<br/>[MemoryPanel.tsx]"]
-node_confirm_ui["Confirmation form"]
-node_api_client["Typed API client<br/>[api.ts]"]
+EvidenceDB[(Document Evidence)]
+MemoryDB[(Hindsight Vector Memory)]
+GroqLLM[(Groq Inference)]
 
-node_api_server["FastAPI routes<br/>[main.py]"]
-node_upload["Evidence ingestion<br/>[main.py]"]
-node_analysis["Finding analysis"]
-node_readiness["Readiness checks<br/>[readiness.py]"]
-node_feedback["Audit feedback<br/>[state.py]"]
+Auditor -->|Uploads & Chats| AuditUI
+AuditUI -->|API Requests| AuditServer
+AuditServer -->|Orchestrates| AgentCore
 
-node_ask["Question answering<br/>[ask.py]"]
-node_agent_llm["Structured inference<br/>[llm.py]"]
-node_memory_client["Memory wrapper<br/>[client.py]"]
-node_omniroute_client["OmniRoute client<br/>[llm_client.py]"]
-
-node_hindsight[("Hindsight memory")]
-node_groq{{"Groq inference"}}
-node_omniroute{{"OmniRoute service"}}
-
-node_auditor -->|"uses"| node_page
-node_page -->|"renders"| node_sources_ui
-node_page -->|"renders"| node_chat_ui
-node_page -->|"renders"| node_memory_ui
-node_page -->|"renders"| node_confirm_ui
-node_page -->|"requests"| node_api_client
-
-node_api_client -->|"HTTP calls"| node_api_server
-node_api_server -->|"handles uploads"| node_upload
-node_api_server -->|"answers questions"| node_ask
-node_api_server -->|"analyzes findings"| node_analysis
-node_api_server -->|"gets readiness"| node_readiness
-node_api_server -->|"records feedback"| node_feedback
-
-node_upload -->|"retains evidence"| node_memory_client
-node_ask -->|"recalls memories"| node_memory_client
-node_ask -->|"generates answer"| node_agent_llm
-
-node_memory_client -->|"reads and writes"| node_hindsight
-node_agent_llm -->|"calls model"| node_groq
-node_omniroute_client -.->|"routes completions"| node_omniroute
-node_omniroute_client -.->|"fallback calls"| node_groq
-
-click node_page "https://github.com/shrx404/audit-agent/blob/main/frontend/src/app/page.tsx"
-click node_sources_ui "https://github.com/shrx404/audit-agent/blob/main/frontend/src/components/left-panel/SourceDataCorpus.tsx"
-click node_chat_ui "https://github.com/shrx404/audit-agent/blob/main/frontend/src/components/middle-panel/ChatWindow.tsx"
-click node_memory_ui "https://github.com/shrx404/audit-agent/blob/main/frontend/src/components/right-panel/MemoryPanel.tsx"
-click node_confirm_ui "https://github.com/shrx404/audit-agent/blob/main/frontend/src/components/ConfirmationForm.tsx"
-click node_api_client "https://github.com/shrx404/audit-agent/blob/main/frontend/src/lib/api.ts"
-click node_api_server "https://github.com/shrx404/audit-agent/blob/main/backend/main.py"
-click node_upload "https://github.com/shrx404/audit-agent/blob/main/backend/main.py"
-click node_analysis "https://github.com/shrx404/audit-agent/tree/main/backend/agent"
-click node_readiness "https://github.com/shrx404/audit-agent/blob/main/backend/agent/readiness.py"
-click node_feedback "https://github.com/shrx404/audit-agent/blob/main/backend/agent/state.py"
-click node_ask "https://github.com/shrx404/audit-agent/blob/main/backend/agent/ask.py"
-click node_agent_llm "https://github.com/shrx404/audit-agent/blob/main/backend/agent/llm.py"
-click node_memory_client "https://github.com/shrx404/audit-agent/blob/main/backend/memory/client.py"
-click node_omniroute_client "https://github.com/shrx404/audit-agent/blob/main/omniroute/services/llm_client.py"
+AgentCore -->|Ingests & Parses| EvidenceDB
+AgentCore -->|Semantic Recall| MemoryDB
+AgentCore -->|Structured Prompts| GroqLLM
 ```
 
 ---
