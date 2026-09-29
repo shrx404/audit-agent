@@ -14,7 +14,7 @@ def load_json(filename: str):
 
 def seed_memory():
     client = HindsightWrapper()
-    client.create_bank("FinPay Audit")
+    client.create_bank("Meridian Audit")
 
     controls = {c["id"]: c["name"] for c in load_json("controls.json")}
     findings = load_json("findings.json")
