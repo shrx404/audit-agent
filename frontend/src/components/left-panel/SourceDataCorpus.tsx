@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { DocumentIcon, Icon } from "../Icon";
 import type { SourceCategory, SourceRecord } from "../../types/audit";
-const folders: SourceCategory[] = [
+const defaultFolders: SourceCategory[] = [
   "Policies",
   "Findings",
   "Remediations",
@@ -31,6 +31,10 @@ export function SourceDataCorpus({
         .toLowerCase()
         .includes(query.toLowerCase()),
   );
+  const activeFolders = Array.from(
+    new Set([...defaultFolders, ...sources.map((s) => s.category)]),
+  );
+
   return (
     <aside
       className="sources-panel"
@@ -93,10 +97,11 @@ export function SourceDataCorpus({
         </div>
       </div>
       <div className="file-tree">
-        {folders
+        {activeFolders
           .filter((f) => filter === "All" || filter === f)
           .map((folder) => {
             const files = matches.filter((s) => s.category === folder);
+            if (files.length === 0) return null;
             const expanded = !!query || !closed.includes(folder);
             return (
               <div className="tree-folder" key={folder}>
