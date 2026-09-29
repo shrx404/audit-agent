@@ -206,6 +206,7 @@ async def upload_file(file: UploadFile = File(...)):
 class AskRequest(BaseModel):
     question: str
     use_memory: bool
+    context_id: Optional[str] = None
 
 @app.post("/ask")
 def ask(req: AskRequest):
@@ -214,7 +215,7 @@ def ask(req: AskRequest):
     report = get_readiness_report()
     open_flags = [f for f in report.flags if f.state == "open"]
     
-    answer, sources, memories = ask_agent(req.question, req.use_memory, open_flags, hindsight, llm)
+    answer, sources, memories = ask_agent(req.question, req.use_memory, open_flags, hindsight, llm, req.context_id)
     return {
         "answer": answer,
         "sources": sources,
