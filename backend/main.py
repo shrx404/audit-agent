@@ -80,15 +80,47 @@ def get_uploaded_sources_path():
     return os.path.join(os.path.dirname(__file__), "data", "uploaded_sources.json")
 
 @app.get("/sources")
-def get_sources():
+async def get_sources():
     path = get_uploaded_sources_path()
+    uploaded = []
     if os.path.exists(path):
         with open(path, "r", encoding="utf-8") as f:
             try:
-                return json.load(f)
+                uploaded = json.load(f)
             except:
-                return []
-    return []
+                pass
+                
+    try:
+        hindsight = HindsightWrapper()
+        res = await hindsight.client.documents.list_documents(bank_id=hindsight.bank_id, limit=100)
+        docs = res.to_dict().get("items", [])
+        
+        uploaded_ids = {u["id"] for u in uploaded}
+        for doc in docs:
+            if doc["id"] not in uploaded_ids:
+                title = doc["id"]
+                if doc.get("retain_params") and doc["retain_params"].get("context"):
+                    context = doc["retain_params"]["context"]
+                    if context.startswith("Uploaded document: "):
+                        title = context.replace("Uploaded document: ", "")
+                
+                uploaded.append({
+                    "id": doc["id"],
+                    "title": title,
+                    "category": "Documents",
+                    "kind": "Documents",
+                    "tone": "muted",
+                    "description": "Document indexed in Hindsight online corpus.",
+                    "date": doc.get("created_at", "").split("T")[0] if doc.get("created_at") else "",
+                    "details": {},
+                    "content": "",
+                    "origin": "indexed",
+                    "status": "indexed"
+                })
+    except Exception as e:
+        print(f"Failed to fetch online corpus documents: {e}")
+
+    return uploaded
 
 @app.post("/upload")
 async def upload_file(file: UploadFile = File(...)):
