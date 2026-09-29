@@ -29,6 +29,25 @@ AgentCore -->|Structured Prompts| GroqLLM
 
 ---
 
+## Product Showcase
+
+### 1. Intelligent Evidence Ingestion
+Upload your SOC 2 reports, policies, and prior findings. The agent automatically chunks, vectorizes, and indexes the documents into the Hindsight Memory bank for real-time recall.
+<br>
+![Upload Evidence](./assets/upload-evidence.png)
+
+### 2. Conversational Audit Workspace
+A clean, specialized interface where auditors can ask multi-hop compliance questions. The agent cross-references active context against the vector memory.
+<br>
+![Audit Workspace](./assets/audit-workspace.png)
+
+### 3. Stateful Memory & Context Verification
+When a finding is identified, Audit Agent transparently cites its sources. The right-hand panel displays exactly which historical memories (e.g., past access review issues) were recalled to make the determination.
+<br>
+![Memory Recall](./assets/memory-recall.png)
+
+---
+
 ## Key Features
 
 | Feature | Description |
