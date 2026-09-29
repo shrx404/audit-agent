@@ -44,14 +44,14 @@ def detect_flags(as_of_date: date) -> List[Flag]:
             # check latest finding
             latest_finding = max(c_findings, key=lambda x: x['raised_date'])
             latest_rem = rem_by_finding.get(latest_finding['id'])
-            if latest_rem and latest_rem['status'] != 'verified':
+            if not latest_rem or latest_rem['status'] != 'verified':
                 flags.append(Flag(
                     id=f"repeat_finding:{cid}",
                     kind="repeat_finding",
                     control_id=cid,
                     severity=latest_finding['severity'],
                     explanation=f"Control {cid} has findings in multiple audit cycles and the latest finding is not verified.",
-                    sources=[latest_finding['id'], latest_rem['id'], cid],
+                    sources=[latest_finding['id'], latest_rem['id'] if latest_rem else cid, cid],
                     memories=[],
                     state="open",
                     state_note=None
@@ -61,8 +61,6 @@ def detect_flags(as_of_date: date) -> List[Flag]:
     # For overdue_test, we need control tests
     for t in control_tests:
         cid = t['control_id']
-        if cid != 'A1.3':
-            continue
         last_tested = date.fromisoformat(t['last_tested'])
         days_since = (as_of_date - last_tested).days
         if days_since > t['required_frequency_days']:
@@ -71,7 +69,7 @@ def detect_flags(as_of_date: date) -> List[Flag]:
                 kind="overdue_test",
                 control_id=cid,
                 severity="medium",
-                explanation=f"Control {cid} backup restore test is overdue by {days_since - t['required_frequency_days']} days.",
+                explanation=f"Control {cid} test is overdue by {days_since - t['required_frequency_days']} days.",
                 sources=[cid],  # Could add a test ID if we had one
                 memories=[],
                 state="open",

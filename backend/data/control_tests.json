@@ -1,16 +1,1 @@
-[
-  {
-    "control_id": "A1.3",
-    "last_tested": "2025-07-28",
-    "tester": "Rahul Iyer",
-    "result": "passed",
-    "required_frequency_days": 365
-  },
-  {
-    "control_id": "CC8.1",
-    "last_tested": "2025-08-15",
-    "tester": "Arjun Mehta",
-    "result": "passed",
-    "required_frequency_days": 365
-  }
-]
+[]

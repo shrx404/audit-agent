@@ -20,7 +20,7 @@ class HindsightWrapper:
     def __init__(self):
         base_url = os.environ.get("HINDSIGHT_BASE_URL")
         api_key = os.environ.get("HINDSIGHT_API_KEY")
-        self.bank_id = os.environ.get("HINDSIGHT_BANK_ID", "finpay-audit")
+        self.bank_id = os.environ.get("HINDSIGHT_BANK_ID", "meridian-audit")
         
         if not base_url or not api_key:
             raise ValueError("Hindsight configuration missing in environment variables.")

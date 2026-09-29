@@ -32,8 +32,37 @@ function record(
   };
 }
 // Markdown views of actual seed records, not invented PDF/Word documents or Hindsight results.
+interface PolicyChange {
+  description: string;
+  date: string;
+  [key: string]: unknown;
+}
+
+interface Finding {
+  id: string;
+  audit_cycle: number;
+  auditor_note: string;
+  raised_date: string;
+  [key: string]: unknown;
+}
+
+interface Remediation {
+  id: string;
+  finding_id: string;
+  owner: string;
+  status: string;
+  opened_date: string;
+  [key: string]: unknown;
+}
+
+interface Control {
+  id: string;
+  description: string;
+  [key: string]: unknown;
+}
+
 export const sources: SourceRecord[] = [
-  ...corpus.policy_changes.map((p, i) =>
+  ...(corpus.policy_changes as PolicyChange[]).map((p, i) =>
     record(
       `policy_changes:${i}`,
       "access_review_policy_v3.md",
@@ -44,7 +73,7 @@ export const sources: SourceRecord[] = [
       "policy_changes",
     ),
   ),
-  ...corpus.findings.map((f) =>
+  ...(corpus.findings as Finding[]).map((f) =>
     record(
       f.id,
       `${f.id}.md`,
@@ -55,7 +84,7 @@ export const sources: SourceRecord[] = [
       "findings",
     ),
   ),
-  ...corpus.remediations.map((r) =>
+  ...(corpus.remediations as Remediation[]).map((r) =>
     record(
       r.id,
       `${r.id}.md`,
@@ -66,7 +95,7 @@ export const sources: SourceRecord[] = [
       "remediations",
     ),
   ),
-  ...corpus.controls
+  ...(corpus.controls as Control[])
     .filter((c) => c.id === "CC6.2")
     .map((c) =>
       record(

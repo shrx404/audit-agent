@@ -1,12 +1,20 @@
-from typing import List, Dict, Any, Tuple
+import logging
+from typing import List, Dict, Any, Tuple, Optional
 from schemas import Flag, MemoryHit
 from agent.llm import AgentLLM
 from agent.prompts import ASK_SYSTEM_PROMPT
 from memory.client import HindsightWrapper
 from pydantic import BaseModel
 
+logger = logging.getLogger(__name__)
+
 class AskResponseFormat(BaseModel):
     answer: str
+    records: Optional[str] = None
+    recurrence: Optional[str] = None
+    evidence_gaps: Optional[str] = None
+    prediction: Optional[str] = None
+    limitations: Optional[str] = None
     sources: List[str]
 
 def ask_agent(question: str, use_memory: bool, open_flags: List[Flag], hindsight: HindsightWrapper, llm: AgentLLM) -> Tuple[str, List[str], List[MemoryHit]]:
@@ -14,7 +22,8 @@ def ask_agent(question: str, use_memory: bool, open_flags: List[Flag], hindsight
         user_prompt = f"Question: {question}\n\nNote: You have NO access to company history. Provide generic advice."
         try:
             res = llm.generate_json(ASK_SYSTEM_PROMPT, user_prompt, AskResponseFormat)
-            return res.answer, [], []
+            final_answer = res.answer
+            return final_answer, [], []
         except Exception:
             return "I cannot answer that right now.", [], []
             
@@ -32,8 +41,17 @@ Current Open Flags:
 Recalled History:
 {memory_texts}
 """
+    
+    # Log memory context
+    logger.info(f"Dataset ID: {hindsight.bank_id}")
+    logger.info(f"Final Prompt:\n{user_prompt}")
+    for m in memories:
+        logger.info(f"Retrieved Memory - ID: {m.id}, Text: {m.text}")
+        
     try:
         res = llm.generate_json(ASK_SYSTEM_PROMPT, user_prompt, AskResponseFormat)
+        logger.info(f"LLM Response: {res.model_dump_json()}")
+        
         valid_sources = []
         for s in res.sources:
             s_clean = s.replace("\u2011", "-").replace("source", "").strip(" ()[]")
@@ -54,12 +72,28 @@ Recalled History:
                     if f.id not in valid_sources:
                         valid_sources.append(f.id)
                         
+        if not valid_sources and len(res.sources) > 0:
+            return "I cannot answer this question because there is insufficient evidence in the provided history.", [], memories
+            
         if not valid_sources and "No supporting history" not in res.answer:
             if memories:
-                valid_sources = [m.id for m in memories[:3]]
+                # Should not use a random valid_source if none matched!
+                return "I cannot answer this question because there is insufficient evidence in the provided history.", [], memories
             else:
                 return "No supporting history found.", [], memories
+                
+        final_answer = res.answer
+        if res.records:
+            final_answer += f"\n\n### Records\n{res.records}"
+        if res.recurrence:
+            final_answer += f"\n\n### Recurrence\n{res.recurrence}"
+        if res.evidence_gaps:
+            final_answer += f"\n\n### Evidence Gaps\n{res.evidence_gaps}"
+        if res.prediction:
+            final_answer += f"\n\n### Prediction\n{res.prediction}"
+        if res.limitations:
+            final_answer += f"\n\n### Limitations\n{res.limitations}"
             
-        return res.answer, valid_sources, memories
+        return final_answer, valid_sources, memories
     except Exception as e:
         return f"Error analyzing history: {str(e)}", [], []
