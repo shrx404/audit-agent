@@ -137,10 +137,10 @@ export function ChatWindow({
             <div className="starter-prompts">
               <button
                 onClick={() =>
-                  setInput("What are the next steps for finding F-2024-03?")
+                  setInput("What are the next steps for finding FIND-005?")
                 }
               >
-                Review finding F-2024-03
+                Review finding FIND-005
                 <Icon name="arrow" size={14} />
               </button>
               <button
