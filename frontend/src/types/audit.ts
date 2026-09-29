@@ -1,4 +1,4 @@
-export type SourceCategory = 'Policies' | 'Findings' | 'Remediations' | 'Access Reviews' | 'Past Cases';
+export type SourceCategory = 'Policies' | 'Findings' | 'Remediations' | 'Access Reviews' | 'Past Cases' | 'Controls';
 export interface SourceRecord {
   id: string;
   title: string;
