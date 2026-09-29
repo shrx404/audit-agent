@@ -17,7 +17,7 @@ class AskResponseFormat(BaseModel):
     limitations: Optional[str] = None
     sources: List[str]
 
-def ask_agent(question: str, use_memory: bool, open_flags: List[Flag], hindsight: HindsightWrapper, llm: AgentLLM) -> Tuple[str, List[str], List[MemoryHit]]:
+def ask_agent(question: str, use_memory: bool, open_flags: List[Flag], hindsight: HindsightWrapper, llm: AgentLLM, context_id: Optional[str] = None) -> Tuple[str, List[str], List[MemoryHit]]:
     if not use_memory:
         user_prompt = f"Question: {question}\n\nNote: You have NO access to company history. Provide generic advice."
         try:
@@ -28,7 +28,8 @@ def ask_agent(question: str, use_memory: bool, open_flags: List[Flag], hindsight
             return "I cannot answer that right now.", [], []
             
     # use_memory = True
-    memories = hindsight.recall(question)
+    recall_query = f"{context_id} {question}" if context_id else question
+    memories = hindsight.recall(recall_query)
     memory_texts = "\n".join([f"- [{m.id}] {m.text}" for m in memories[:10]])
     
     flags_text = "\n".join([f"- {f.id}: {f.explanation}" for f in open_flags])

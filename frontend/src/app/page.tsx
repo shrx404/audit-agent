@@ -151,6 +151,15 @@ export default function Home() {
       finalQuestion = `${question}\n\nCurrent source (${current.title}, ${current.id}):\n${current.content.slice(0, 12000)}`;
     }
 
+    const allMessagesText = messages.map((m) => m.text).join('\n');
+    const historyIds = Array.from(allMessagesText.matchAll(/(CTRL-\d+|FIND-\d+|REM-\d+|CTEST-\d+)/g)).map((m) => m[0]);
+    const historyContextId = historyIds.length > 0 ? historyIds[historyIds.length - 1] : null;
+
+    const questionIds = Array.from(question.matchAll(/(CTRL-\d+|FIND-\d+|REM-\d+|CTEST-\d+)/g)).map((m) => m[0]);
+    const questionContextId = questionIds.length > 0 ? questionIds[questionIds.length - 1] : null;
+    
+    const context_id = questionContextId || historyContextId || null;
+
     try {
       const res = await fetch("/api/ask", {
         method: "POST",
@@ -158,6 +167,7 @@ export default function Home() {
         body: JSON.stringify({
           question: finalQuestion,
           use_memory: useMemory,
+          context_id: context_id,
         }),
       });
       if (!res.ok) {
@@ -212,7 +222,7 @@ export default function Home() {
               memory_ids: ["m1"],
               is_recurrence_candidate: true,
               comparison: {
-                "F-2024-03": {
+                "FIND-005": {
                   rating: "match",
                   reason: "Both involve delayed access revocation.",
                 },
@@ -605,7 +615,7 @@ export default function Home() {
                   required
                   value={control}
                   onChange={(e) => setControl(e.target.value)}
-                  placeholder="e.g. CC6.2"
+                  placeholder="e.g. CTRL-005"
                 />
               </label>
               <label>

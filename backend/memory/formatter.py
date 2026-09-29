@@ -53,7 +53,7 @@ def format_staff_departure(staff: Dict[str, Any]) -> str:
     """Format staff departure into memory text."""
     date = staff["departed_date"]
     name = staff["name"]
-    return f"On {date} {name} left FinPay."
+    return f"On {date} {name} left Meridian."
 
 def format_user_feedback(date: str, flag_id: str, action: str, evidence_ref: Optional[str], session_id: str) -> str:
     """Format user feedback into memory text."""

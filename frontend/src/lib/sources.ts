@@ -96,12 +96,11 @@ export const sources: SourceRecord[] = [
     ),
   ),
   ...(corpus.controls as Control[])
-    .filter((c) => c.id === "CC6.2")
     .map((c) =>
       record(
         c.id,
-        "user_access_reviews.md",
-        "Access Reviews",
+        `${c.id.toLowerCase()}.md`,
+        "Controls",
         c.description,
         "",
         c,
