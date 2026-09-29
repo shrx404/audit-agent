@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { DocumentIcon, Icon } from "../Icon";
 import type { SourceCategory, SourceRecord } from "../../types/audit";
-const defaultFolders: SourceCategory[] = [
+const defaultFolders: (SourceCategory | "Documents")[] = [
   "Policies",
   "Findings",
   "Remediations",
   "Access Reviews",
   "Past Cases",
+  "Documents",
 ];
 export function SourceDataCorpus({
   sources,
@@ -84,7 +85,7 @@ export function SourceDataCorpus({
           )}
         </label>
         <div className="source-filters" aria-label="Filter sources">
-          {["All", "Policies", "Findings", "Remediations"].map((f) => (
+          {["All", "Policies", "Findings", "Remediations", "Documents"].map((f) => (
             <button
               key={f}
               className={filter === f ? "active" : ""}
